@@ -1,0 +1,12 @@
+12a13
+> * Modifications for EMS, Copyright 1994, Eric Korpela                       *
+40a42
+> 
+1117d1118
+< 
+1120a1122
+>     EMS_Setup();
+1176c1178
+< 
+---
+>     set_int(0x4b, NULL, 0, int_67, afterint, sizeof afterint);
