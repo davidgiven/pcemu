@@ -1,0 +1,39 @@
+
+
+1.01
+
+Speeded up BIOS printing by buffering write requests which occured within a
+short space of time. Result is a dramatic increase in speed (particularly
+for slow X terminals) when doing directory listings etc.
+
+Added kludge to support vga 50 line mode. This will be redone when/if font
+changes are fully supported. For now, it uses the same font, but simply
+changes the window size to accomodate the larger screen area. Switching to
+50 line mode can either be accomplished by loading ansi.sys in the
+config.sys file and then using 'mode con lines=50', or by using the program
+'vga50.com' in the programs directory. You can type 'mode co80' to return
+to the normal 80x25 display...
+
+Added ability to change compile time options via the Makefile
+Added support for a .pcemurc file to read various parameters at run time
+
+Added dumpdisk.{exe,c} for people without access to a Unix floppy disk so they
+can create a disk image
+
+Improved support for Sun type 4 keyboards. Made Meta equivalent to Alt key
+
+Added support for Int 0x10 function 0x1b which many programs call. A lot of
+the information it returns it a bit dubious, but it means ansi.sys no
+longer minds switching into 50 line mode
+
+Made control-break clear the keyboard buffer
+
+Altered the directory stuff in mfs.c to try to make it more portable
+
+Fixed silly bug where caps lock was being treated as shift lock.
+
+1.00
+
+Initial release
+
+
