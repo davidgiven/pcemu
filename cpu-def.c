@@ -7,15 +7,20 @@ static INLINE2 void i_#{$name}#_br8(void)
        ChangesFlags: CF,PF,AF,ZF,SF,OF
        UsesFlags: None
      */
+    unsigned init_ip = ip;
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
     register unsigned src = (unsigned)*GetModRMRegB(ModRM);
     BYTE *dest = GetModRMRMB(ModRM);
     register unsigned tmp = (unsigned) *dest;
     tmp #{$op}#= src;
+
+    if (must_eval_flags(init_ip))
+    {
     CF = OF = AF = 0;
     SetZFB(tmp);
     SetSFB(tmp);
     SetPF(tmp);
+    }
     WriteByte(dest, tmp);
 }
 
@@ -28,16 +33,22 @@ static INLINE2 void i_#{$name}#_wr16(void)
        ChangesFlags: CF,PF,AF,ZF,SF,OF
        UsesFlags: None
      */
+    unsigned init_ip = ip;
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *src = GetModRMRegW(ModRM);
     WORD *dest = GetModRMRMW(ModRM);
     register unsigned tmp1 = (unsigned)ReadWord(src);
     register unsigned tmp2 = (unsigned)ReadWord(dest);
     register unsigned tmp3 = tmp1 #{$op}# tmp2;
+
+    if (must_eval_flags(init_ip))
+    {
     CF = OF = AF = 0;
     SetZFW(tmp3);
     SetSFW(tmp3);
     SetPF(tmp3);
+    }
+
     WriteWord(dest,tmp3);
 }
 
@@ -50,15 +61,21 @@ static INLINE2 void i_#{$name}#_r8b(void)
        ChangesFlags: CF,PF,AF,ZF,SF,OF
        UsesFlags: None
      */
+    unsigned init_ip = ip;
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
     register unsigned src = (unsigned)*GetModRMRMB(ModRM);
     BYTE *dest = GetModRMRegB(ModRM);
     register unsigned tmp = (unsigned) *dest;
     tmp #{$op}#= src;
+
+    if (must_eval_flags(init_ip))
+    {
     CF = OF = AF = 0;
     SetZFB(tmp);
     SetSFB(tmp);
     SetPF(tmp);
+    }
+
     WriteByte(dest, tmp);
 }
 
@@ -71,16 +88,22 @@ static INLINE2 void i_#{$name}#_r16w(void)
        ChangesFlags: CF,PF,AF,ZF,SF,OF
        UsesFlags: None
      */
+    unsigned init_ip = ip;
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *dest = GetModRMRegW(ModRM);
     WORD *src = GetModRMRMW(ModRM);
     register unsigned tmp1 = (unsigned)ReadWord(src);
     register unsigned tmp2 = (unsigned)ReadWord(dest);
     register unsigned tmp3 = tmp1 #{$op}# tmp2;
+
+    if (must_eval_flags(init_ip))
+    {
     CF = OF = AF = 0;
     SetZFW(tmp3);
     SetSFW(tmp3);
     SetPF(tmp3);
+    }
+
     WriteWord(dest,tmp3);
 }
 
@@ -92,12 +115,18 @@ static INLINE2 void i_#{$name}#_ald8(void)
        ChangesFlags: CF,PF,AF,ZF,SF,OF
        UsesFlags: None
      */
+    unsigned init_ip = ip;
     register unsigned tmp = *bregs[AL];
     tmp #{$op}#= (unsigned)GetMemInc(c_cs,ip);
+
+    if (must_eval_flags(init_ip))
+    {
     CF = OF = AF = 0;
     SetZFB(tmp);
     SetSFB(tmp);
     SetPF(tmp);
+    }
+
     *bregs[AL] = (BYTE)tmp;
 }
 
@@ -109,15 +138,21 @@ static INLINE2 void i_#{$name}#_axd16(void)
        ChangesFlags: CF,PF,AF,ZF,SF,OF
        UsesFlags: None
      */
+    unsigned init_ip = ip;
     register unsigned src;
     register unsigned tmp = ReadWord(&wregs[AX]);
     src = GetMemInc(c_cs,ip);
     src += GetMemInc(c_cs,ip) << 8;
     tmp #{$op}#= src;
+
+    if (must_eval_flags(init_ip))
+    {
     CF = OF = AF = 0;
     SetZFW(tmp);
     SetSFW(tmp);
     SetPF(tmp);
+    }
+
     WriteWord(&wregs[AX],tmp);
 }
 
@@ -202,7 +237,7 @@ static INLINE2 void i_add_br8(void)
        ChangesFlags: CF,PF,AF,ZF,SF,OF
        UsesFlags: None
     */
-
+    unsigned init_ip = ip;
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
     register unsigned src = (unsigned)*GetModRMRegB(ModRM);
     BYTE *dest = GetModRMRMB(ModRM);
@@ -210,13 +245,16 @@ static INLINE2 void i_add_br8(void)
     register unsigned tmp2 = tmp;
     
     tmp += src;
-    
+
+    if (must_eval_flags(init_ip))
+    {
     SetCFB_Add(tmp,tmp2);
     SetOFB_Add(tmp,src,tmp2);
     SetAF(tmp,src,tmp2);
     SetZFB(tmp);
     SetSFB(tmp);
     SetPF(tmp);
+    }
 
     WriteByte(dest, tmp);
 }
@@ -231,6 +269,7 @@ static INLINE2 void i_add_wr16(void)
        UsesFlags: None
      */
 
+    unsigned init_ip = ip;
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *src = GetModRMRegW(ModRM);
     WORD *dest = GetModRMRMW(ModRM);
@@ -240,12 +279,15 @@ static INLINE2 void i_add_wr16(void)
 
     tmp3 = tmp1+tmp2;
 
+    if (must_eval_flags(init_ip))
+    {
     SetCFW_Add(tmp3,tmp1);
     SetOFW_Add(tmp3,tmp2,tmp1);
     SetAF(tmp3,tmp2,tmp1);
     SetZFW(tmp3);
     SetSFW(tmp3);
     SetPF(tmp3);
+    }
 
     WriteWord(dest, tmp3);
 }
@@ -289,6 +331,7 @@ static INLINE2 void i_add_r16w(void)
        UsesFlags: None
      */
 
+    unsigned init_ip = ip;
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *dest = GetModRMRegW(ModRM);
     WORD *src = GetModRMRMW(ModRM);
@@ -298,12 +341,15 @@ static INLINE2 void i_add_r16w(void)
 
     tmp3 = tmp1 + tmp2;
 
+    if (must_eval_flags(init_ip))
+    {
     SetCFW_Add(tmp3,tmp1);
     SetOFW_Add(tmp3,tmp2,tmp1);
     SetAF(tmp3,tmp2,tmp1);
     SetZFW(tmp3);
     SetSFW(tmp3);
     SetPF(tmp3);
+    }
 
     WriteWord(dest, tmp3);
 }
@@ -317,18 +363,22 @@ static INLINE2 void i_add_ald8(void)
        ChangesFlags: CF,PF,AF,ZF,SF,OF
      */
 
+    unsigned init_ip = ip;
     register unsigned src = (unsigned)GetMemInc(c_cs,ip);
     register unsigned tmp = (unsigned)*bregs[AL];
     register unsigned tmp2 = tmp;
 
     tmp2 += src;
 
+    if (must_eval_flags(init_ip))
+    {
     SetCFB_Add(tmp2,tmp);
     SetOFB_Add(tmp2,src,tmp);
     SetAF(tmp2,src,tmp);
     SetZFB(tmp2);
     SetSFB(tmp2);
     SetPF(tmp2);
+    }
 
     *bregs[AL] = (BYTE)tmp2;
 }
@@ -947,7 +997,7 @@ static INLINE2 void i_sub_r16w(void)
        UsesFlags: None
        ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
-
+    unsigned init_ip = ip;
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *dest = GetModRMRegW(ModRM);
     WORD *src = GetModRMRMW(ModRM);
@@ -957,12 +1007,15 @@ static INLINE2 void i_sub_r16w(void)
 
     tmp3 = tmp1-tmp2;
 
+    if (must_eval_flags(init_ip))
+    {
     SetCFW_Sub(tmp2,tmp1);
     SetOFW_Sub(tmp3,tmp2,tmp1);
     SetAF(tmp3,tmp2,tmp1);
     SetZFW(tmp3);
     SetSFW(tmp3);
     SetPF(tmp3);
+    }
 
     WriteWord(dest, tmp3);
 }
@@ -1157,6 +1210,7 @@ static INLINE2 void i_cmp_r16w(void)
        ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
+    unsigned int init_ip = ip;
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *dest = GetModRMRegW(ModRM);
     WORD *src = GetModRMRMW(ModRM);
@@ -1166,12 +1220,15 @@ static INLINE2 void i_cmp_r16w(void)
 
     tmp3 = tmp1-tmp2;
 
+    if (must_eval_flags(init_ip))
+    {
     SetCFW_Sub(tmp2,tmp1);
     SetOFW_Sub(tmp3,tmp2,tmp1);
     SetAF(tmp3,tmp2,tmp1);
     SetZFW(tmp3);
     SetSFW(tmp3);
     SetPF(tmp3);
+    }
 }
 
 
