@@ -1,0 +1,10 @@
+64c64
+<           hardware.o mfs.o
+---
+>           hardware.o mfs.o ems.o
+79a80,84
+> ems.o: $(GLOBAL_DEP) cpu.h bios.h
+> cpu.s: $(GLOBAL_DEP) cpu.h instr.h debugger.h hardware.h
+> 
+> .c.s:
+> 	$(CC) $(CFLAGS) $(OPTIONS) -S $<

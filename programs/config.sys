@@ -1,0 +1,2 @@
+device=emufs.sys /
+stacks 9,512
