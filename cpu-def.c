@@ -2,6 +2,7 @@ MACRO i__br8;
 static INLINE2 void i_#{$name}#_br8(void)
 {
     /* Opcode: #{$opcode}# 
+       Length: 2
        Attr: HasModRMRMB
      */
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -20,6 +21,7 @@ MACRO i__wr16;
 static INLINE2 void i_#{$name}#_wr16(void)
 {
     /* Opcode: #{$opcode}# 
+       Length: 2
        Attr: HasModRMRMW
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -39,6 +41,7 @@ MACRO i__r8b;
 static INLINE2 void i_#{$name}#_r8b(void)
 {
     /* Opcode: #{$opcode}# 
+       Length: 2
        Attr: HasModRMRMB
      */
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -57,6 +60,7 @@ MACRO i__r16w;
 static INLINE2 void i_#{$name}#_r16w(void)
 {
     /* Opcode: #{$opcode}# 
+       Length: 2
        Attr: HasModRMRMW
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -76,6 +80,7 @@ MACRO i__ald8;
 static INLINE2 void i_#{$name}#_ald8(void)
 {
     /* Opcode: #{$opcode}# 
+       Length: 2
      */
     register unsigned tmp = *bregs[AL];
     tmp #{$op}#= (unsigned)GetMemInc(c_cs,ip);
@@ -90,6 +95,7 @@ MACRO i__axd16;
 static INLINE2 void i_#{$name}#_axd16(void)
 {
     /* Opcode: #{$opcode}# 
+       Length: 3
      */
     register unsigned src;
     register unsigned tmp = ReadWord(&wregs[AX]);
@@ -129,6 +135,7 @@ static INLINE2 void i_j#{$name}#(void)
 {
     /* Opcode: #{$opcode}# 
        Attr: IsJump,IsShortJump
+       Length: 2
      */
     register int tmp;
     PreJumpHook(c_cs + ip);
@@ -588,7 +595,7 @@ static INLINE2 void i_sbb_br8(void)
 static INLINE2 void i_sbb_wr16(void)
 {
     /* Opcode: 0x19 
-       Length: 3
+       Length: 2
        Attr: HasModRMRMW
      */
 
@@ -958,6 +965,7 @@ static INLINE2 void i_cs(void)
 static INLINE2 void i_ss(void)
 {
     /* Opcode: 0x36 
+       Attr: IsPrefix
        Length: 3
      */
 
@@ -1478,7 +1486,7 @@ static INLINE2 void i_80pre(void)
 {
     /* Opcode: 0x80
        Length: 3
-       Attr: HasModRMRMB
+       Attr: IsPrefix,HasModRMRMB
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
     BYTE *dest = GetModRMRMB(ModRM);
@@ -1597,7 +1605,7 @@ static INLINE2 void i_81pre(void)
 {
     /* Opcode: 0x81
        Length: 4
-       Attr: HasModRMRMW
+       Attr: IsPrefix,HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1718,8 +1726,7 @@ static INLINE2 void i_83pre(void)
 {
     /* Opcode: 0x83 
        Length: 3
-       Attr: IsPrefix
-       Attr: HasModRMRMW
+       Attr: IsPrefix,HasModRMRMW
      */
     /*        PENDING */
 
@@ -1936,7 +1943,6 @@ static INLINE2 void i_mov_wr16(void)
 {
     /* Opcode: 0x89 
        Length: 2
-       Args: ModRMW
        Attr: HasModRMRMW
      */
 
@@ -1952,7 +1958,6 @@ static INLINE2 void i_mov_r8b(void)
 {
     /* Opcode: 0x8a
        Length: 2
-       Args: ModRMB
        Attr: HasModRMRMB
      */
 
@@ -1995,10 +2000,11 @@ static INLINE2 void i_mov_wsreg(void)
 
 static INLINE2 void i_lea(void)
 {
-    /* Opcode: 0x8d 
+    /* Opcode: 0x8d
+       Attr: IsPrefix,HasModRMRMW
        Length: 3
      */
-
+    /* PENDING: Why does this have it's own mod code? */
     register unsigned ModRM = GetMemInc(c_cs,ip);
     register unsigned src = 0;
     register WORD *dest = GetModRMRegW(ModRM);
@@ -2168,6 +2174,7 @@ static INLINE2 void i_call_far(void)
 {
     /* Opcode: 0x9a
        Attr: IsJump,IsCall
+       Length: 5
      */
     register unsigned tmp, tmp1, tmp2;
 
@@ -2732,6 +2739,7 @@ static INLINE2 void i_ret_d16(void)
 {
     /* Opcode: 0xc2 
        Attr: IsJump,IsRet
+       Length: 3
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2754,6 +2762,7 @@ static INLINE2 void i_ret(void)
 {
     /* Opcode: 0xc3 
        Attr: IsJump,IsRet
+       Length: 1
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2790,7 +2799,7 @@ static INLINE2 void i_les_dw(void)
 static INLINE2 void i_lds_dw(void)
 {
     /* Opcode: 0xc5 
-       Length: 3
+       Length: 2
        Attr: HasModRMRMW
      */
 
@@ -2943,7 +2952,7 @@ static INLINE2 void i_d0pre(void)
 {
     /* Opcode: 0xd0 
        Length: 2
-       Attr: HasModRMRMB
+       Attr: Prefix,HasModRMRMB
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -3096,7 +3105,7 @@ static INLINE2 void i_d2pre(void)
 {
     /* Opcode: 0xd2 
        Length: 2
-       Attr: HasModRMRMB
+       Attr: IsPrefix,HasModRMRMB
      */
 
     unsigned ModRM;
@@ -3369,6 +3378,7 @@ static INLINE2 void i_xlat(void)
 static INLINE2 void i_escape(void)
 {
     /* Opcode: 0xd8,0xd9,0xda,0xdb,0xdc,0xdd,0xde,0xdf 
+       Length: 2
        Attr: HasModRMRMB
      */
 
@@ -3380,6 +3390,7 @@ static INLINE2 void i_loopne(void)
 {
     /* Opcode: 0xe0 
        Attr: IsJump,IsShortJump
+       Length: 2
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3398,6 +3409,7 @@ static INLINE2 void i_loope(void)
 {
     /* Opcode: 0xe1 
        Attr: IsJump,IsShortJump
+       Length: 2
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3416,6 +3428,7 @@ static INLINE2 void i_loop(void)
 {
     /* Opcode: 0xe2 
        Attr: IsJump,IsShortJump
+       Length: 2
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3434,6 +3447,7 @@ static INLINE2 void i_jcxz(void)
 {
     /* Opcode: 0xe3 
        Attr: IsJump,IsShortJump
+       Length: 2
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3494,6 +3508,7 @@ static INLINE2 void i_call_d16(void)
 {
     /* Opcode: 0xe8 
        Attr: IsJump,IsCall
+       Length: 3
      */
 
     register unsigned tmp;
@@ -3517,6 +3532,7 @@ static INLINE2 void i_jmp_d16(void)
 {
     /* Opcode: 0xe9 
        Attr: IsJump,IsShortJump
+       Length: 3
      */
 
     register int tmp = GetMemInc(c_cs,ip);
@@ -3535,6 +3551,7 @@ static INLINE2 void i_jmp_far(void)
 {
     /* Opcode: 0xea 
        Attr: IsJump
+       Length: 5
      */
 
     register unsigned tmp,tmp1;
@@ -3559,6 +3576,7 @@ static INLINE2 void i_jmp_d8(void)
 {
     /* Opcode: 0xeb 
        Attr: IsJump,IsShortJump
+       Length: 2
      */
     register int tmp = (int)((INT8)GetMemInc(c_cs,ip));
 
@@ -4127,7 +4145,8 @@ static INLINE2 void i_ffpre(void)
 {
     /* PENDING: Some are jumps so mark all as such */
     /* Opcode: 0xff 
-       Attr: IsJump,HasModRMRMW
+       Attr: IsPrefix,IsJump,HasModRMRMW
+       Length: 2
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);

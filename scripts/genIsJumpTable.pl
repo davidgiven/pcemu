@@ -25,11 +25,13 @@ while (<>) {
   }
 }
 
+print "static const UINT32 cpu_attrs[] =\n{\n";
+
 for ($i = 0; $i < 256; $i++) {
   $attr = $opcodes{$i}{'Attr'};
 
   unless ($attr) {
-    print "    NO_ATTRS,\n";
+    print "    NO_ATTRS, /* $i */\n";
   }
   else {
     %attrs = indexUp($attr);
@@ -52,13 +54,30 @@ for ($i = 0; $i < 256; $i++) {
       push @attrList, "HAS_MODRMRMW";
     }
     if (scalar @attrList) {
-      print "    " . join(' | ', @attrList) . ",\n";
+      print "    " . join(' | ', @attrList) . ", /* $i */\n";
     }
     else {
-      print "    NO_ATTRS,\n";
+      print "    NO_ATTRS, /* $i */\n";
     }
   }
 }
+
+print "    0\n};\n\n";
+
+print "static const UINT32 cpu_length[] =\n{\n";
+
+for ($i = 0; $i < 256; $i++) {
+  $length = $opcodes{$i}{'Length'};
+
+  unless ($length) {
+    print "    0,\n";
+  }
+  else {
+    print "    $length, /* $i */\n";
+  }
+}
+
+print "    0\n};\n\n";
 
 sub indexUp($) {
   $_ = shift;

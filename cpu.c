@@ -129,6 +129,8 @@ static INT32 last_jump_target;
 static INT32 jump_target_hits[MEMORY_SIZE];
 static INT32 bb_length[MEMORY_SIZE];
 
+static void scan_for_translation(void);
+
 static INLINEP void PreJumpHook(void *x)
 {
     INT32 offset = (BYTE *)x - memory;
@@ -149,6 +151,11 @@ static INLINEP void PostJumpHook(void *x)
 
     jump_target_hits[offset]++;
     last_jump_target = offset;
+
+    if (jump_target_hits[offset] == 20)
+    {
+	scan_for_translation();
+    }
 }
 #endif
 
@@ -296,23 +303,24 @@ void trap(void);
 enum
 {
     NO_ATTRS = 0,
-    IS_JUMP = 1,
-    IS_SHORT_JUMP = 2,
-    IS_PREFIX = 4,
-    HAS_MODRM = 8,
-    HAS_MODRMRMB = 16,
-    HAS_MODRMRMW = 32
+    IS_JUMP = 16,
+    IS_SHORT_JUMP = 32,
+    IS_PREFIX = 64,
+    HAS_MODRM = 128,
+    HAS_MODRMRMB = 256,
+    HAS_MODRMRMW = 512
 };
 
-static const UINT32 cpu_attrs[] = 
-{
 #include "cpu-attrs.c"
-    0
-};
 
 static INLINEP int is_jump(BYTE op)
 {
     return cpu_attrs[op] & IS_JUMP;
+}
+
+static INLINEP int is_short_jump(BYTE op)
+{
+    return cpu_attrs[op] & IS_SHORT_JUMP;
 }
 
 static INLINEP int is_prefix(BYTE op)
@@ -328,6 +336,11 @@ static INLINEP int has_modrm(BYTE op)
 static INLINEP int has_modrmrmb(BYTE op)
 {
     return cpu_attrs[op] & HAS_MODRMRMB;
+}
+
+static INLINEP int is_normal(BYTE op)
+{
+    return (cpu_attrs[op] & IS_PREFIX) == 0;
 }
 
 #ifdef PROFILER
@@ -423,6 +436,9 @@ static INT16 can_be_compiled_seed[] =
 };
 
 static INT8 actual_instr_length[256];
+static UINT32 total_translatable_bytes;
+static UINT32 total_translatable_blocks;
+static UINT32 run_spoilers[256];
 
 void dump_profiling(void)
 {
@@ -471,6 +487,22 @@ void dump_profiling(void)
     for (i = 0; i < NUM_ELEMS(actual_instr_length); i++)
     {
 	printf("0x%02X %d\n", i, actual_instr_length[i]);
+    }
+
+    printf("# Total translatable bytes\n"
+	   "total_translatable_bytes %u\n"
+	   "total_translatable_blocks %u\n"
+	   "avg length %u\n",
+	   total_translatable_bytes,
+	   total_translatable_blocks,
+	   total_translatable_bytes / total_translatable_blocks);
+
+
+    printf("# run spoilers\n");
+
+    for (i = 0; i < NUM_ELEMS(run_spoilers); i++)
+    {
+	printf("0x%02X %d\n", i, run_spoilers[i]);
     }
 }
 
@@ -826,7 +858,141 @@ static INLINE BYTE *GetModRMRMB(unsigned ModRM)
                    ReadWord(ModRMRM[ModRM].reg2) + dest));
 }
 
+static INLINEP int get_modrm_length(unsigned ModRM)
+{
+    if (ModRMRM[ModRM].offset)
+    {
+	if (ModRMRM[ModRM].offset16)
+	{
+	    return 2;
+	}
+	else {
+	    return 1;
+	}
+    }
+    else
+    {
+	return 0;
+    }
+}
+
 #include "cpu-instr.c"
+
+static int is_ffpre_translatable(int sip)
+{
+    unsigned ModRM = c_cs[sip+1];
+    
+    switch(ModRM & 0x38)
+    {
+    case 0x00:  /* INC ew */
+    case 0x08:  /* DEC ew */
+    case 0x30:  /* PUSH ea */
+	return 1;
+    case 0x10:  /* CALL ew */
+    case 0x18:  /* CALL FAR ea */
+    case 0x20:  /* JMP ea */
+    case 0x28:  /* JMP FAR ea */
+    default:
+	return 0;
+    }
+}
+
+static int is_83pre_translatable(unsigned sip)
+{
+    return 1;
+}
+
+static int is_8e_translatable(unsigned sip)
+{
+    unsigned ModRM = c_cs[sip+1];
+    
+    switch (ModRM & 0x38)
+    {
+    case 0x00:	/* mov es,... */
+    case 0x18:	/* mov ds,... */
+    case 0x08:	/* mov cs,... (hangs 486, but we'll let it through) */
+	return 1;
+    case 0x10:	/* mov ss,... */
+    default:
+	return 0;
+    }
+}
+
+static void scan_for_translation(void)
+{
+    unsigned sip = ip;
+
+    /* Scan while we know how long this instruction is and while it is
+       not a jump or something special. */
+    do
+    {
+	unsigned ic = c_cs[sip];
+	if (ic == 0xff)
+	{
+	    if (is_ffpre_translatable(sip))
+	    {
+		/* Keep going */
+	    }
+	    else
+	    {
+		run_spoilers[ic]++;
+		break;
+	    }
+	}
+	else if (ic == 0x8e)
+	{
+	    if (is_8e_translatable(sip))
+	    {
+		/* Keep going */
+	    }
+	    else
+	    {
+		run_spoilers[ic]++;
+		break;
+	    }
+	}
+	else if (ic == 0x83 || ic == 0x80)
+	{
+	    /* Always */
+	}
+	else if (ic == 0x26)
+	{
+	    /* Always */
+	    sip++;
+	    ic = c_cs[sip];
+	}
+	else if (cpu_length[ic] == 0 ||
+	    !is_normal(ic))
+	{
+	    run_spoilers[ic]++;
+	    break;
+	}
+	else if (is_jump(ic))
+	{
+	    /* We may be able to inline short jumps */
+	    if (is_short_jump(ic))
+	    {
+	    }
+	    else
+	    {
+		run_spoilers[ic]++;
+		break;
+	    }
+	}
+	sip += cpu_length[ic];
+	if (has_modrm(ic))
+	{
+	    sip += get_modrm_length(ic);
+	}
+    } while (1);
+
+    printf("Found translatable block len %d\n", sip - ip);
+    if ((sip - ip) > 0)
+    {
+	total_translatable_bytes += sip - ip;
+	total_translatable_blocks++;
+    }
+}
 
 void trap(void)
 {
@@ -899,10 +1065,27 @@ void execute(void)
 			    actual_instr_length[last_instr] = len;
 			}
 		    }
+		    
+		    if (cpu_length[last_instr] != 0)
+		    {
+			int expected = get_modrm_length(c_cs[last_ip+1]) + cpu_length[last_instr];
+			if (expected != len)
+			{
+			    printf("Mod mismatch on %02X: expected %d actual %d\n", last_instr, expected, len);
+			}
+		    }
 		}
 	    }
 	    else
 	    {
+		if (cpu_length[last_instr] != 0)
+		{
+		    if (!((ip - last_ip) == cpu_length[last_instr]))
+		    {
+			printf("Length of %02X %d doesn't match %d\n", last_instr, ip - last_ip, cpu_length[last_instr]);
+		    }
+		}
+
 		if (!(actual_instr_length[last_instr] == 0 ||
 		      actual_instr_length[last_instr] == ip - last_ip))
 		{
