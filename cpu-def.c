@@ -2,6 +2,7 @@ MACRO i__br8;
 static INLINE2 void i_#{$name}#_br8(void)
 {
     /* Opcode: #{$opcode}# 
+       Attr: HasModRMRMB
      */
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
     register unsigned src = (unsigned)*GetModRMRegB(ModRM);
@@ -19,6 +20,7 @@ MACRO i__wr16;
 static INLINE2 void i_#{$name}#_wr16(void)
 {
     /* Opcode: #{$opcode}# 
+       Attr: HasModRMRMW
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *src = GetModRMRegW(ModRM);
@@ -37,6 +39,7 @@ MACRO i__r8b;
 static INLINE2 void i_#{$name}#_r8b(void)
 {
     /* Opcode: #{$opcode}# 
+       Attr: HasModRMRMB
      */
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
     register unsigned src = (unsigned)*GetModRMRMB(ModRM);
@@ -54,6 +57,7 @@ MACRO i__r16w;
 static INLINE2 void i_#{$name}#_r16w(void)
 {
     /* Opcode: #{$opcode}# 
+       Attr: HasModRMRMW
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *dest = GetModRMRegW(ModRM);
@@ -124,6 +128,7 @@ MACRO JumpCond;
 static INLINE2 void i_j#{$name}#(void)
 {
     /* Opcode: #{$opcode}# 
+       Attr: IsJump,IsShortJump
      */
     register int tmp;
     PreJumpHook(c_cs + ip);
@@ -170,6 +175,8 @@ IMPLEMENT JumpCond name=nle,cond=(!(!SF)==!(!OF))&&!ZF,opcode=0x7f;
 static INLINE2 void i_add_br8(void)
 {
     /* Opcode: 0x00 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -194,6 +201,8 @@ static INLINE2 void i_add_br8(void)
 static INLINE2 void i_add_wr16(void)
 {
     /* Opcode: 0x01 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -219,6 +228,8 @@ static INLINE2 void i_add_wr16(void)
 static INLINE2 void i_add_r8b(void)
 {
     /* Opcode: 0x02 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -244,6 +255,8 @@ static INLINE2 void i_add_r8b(void)
 static INLINE2 void i_add_r16w(void)
 {
     /* Opcode: 0x03 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -269,6 +282,7 @@ static INLINE2 void i_add_r16w(void)
 static INLINE2 void i_add_ald8(void)
 {
     /* Opcode: 0x04 
+       Length: 2
      */
 
     register unsigned src = (unsigned)GetMemInc(c_cs,ip);
@@ -291,6 +305,7 @@ static INLINE2 void i_add_ald8(void)
 static INLINE2 void i_add_axd16(void)
 {
     /* Opcode: 0x05 
+       Length: 3
      */
 
     register unsigned src;
@@ -316,6 +331,7 @@ static INLINE2 void i_add_axd16(void)
 static INLINE2 void i_push_es(void)
 {
     /* Opcode: 0x06 
+       Length: 1
      */
 
     PushSeg(ES);
@@ -325,6 +341,7 @@ static INLINE2 void i_push_es(void)
 static INLINE2 void i_pop_es(void)
 {
     /* Opcode: 0x07 
+       Length: 1
      */
     PopSeg(c_es,ES);
 }
@@ -334,6 +351,7 @@ static INLINE2 void i_pop_es(void)
 static INLINE2 void i_push_cs(void)
 {
     /* Opcode: 0x0e 
+       Length: 1
      */
 
     PushSeg(CS);
@@ -343,6 +361,8 @@ static INLINE2 void i_push_cs(void)
 static INLINE2 void i_adc_br8(void)
 {
     /* Opcode: 0x10 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -369,6 +389,8 @@ static INLINE2 void i_adc_br8(void)
 static INLINE2 void i_adc_wr16(void)
 {
     /* Opcode: 0x11 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -396,6 +418,7 @@ static INLINE2 void i_adc_wr16(void)
 static INLINE2 void i_adc_r8b(void)
 {
     /* Opcode: 0x12 
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -422,6 +445,8 @@ static INLINE2 void i_adc_r8b(void)
 static INLINE2 void i_adc_r16w(void)
 {
     /* Opcode: 0x13 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -474,6 +499,7 @@ static INLINE2 void i_adc_ald8(void)
 static INLINE2 void i_adc_axd16(void)
 {
     /* Opcode: 0x15 
+       Length: 3
      */
 
     register unsigned src;
@@ -501,6 +527,7 @@ static INLINE2 void i_adc_axd16(void)
 static INLINE2 void i_push_ss(void)
 {
     /* Opcode: 0x16 
+       Length: 1
      */
 
     PushSeg(SS);
@@ -534,6 +561,7 @@ static INLINE2 void i_pop_ss(void)
 static INLINE2 void i_sbb_br8(void)
 {
     /* Opcode: 0x18 
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -560,6 +588,8 @@ static INLINE2 void i_sbb_br8(void)
 static INLINE2 void i_sbb_wr16(void)
 {
     /* Opcode: 0x19 
+       Length: 3
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -587,6 +617,7 @@ static INLINE2 void i_sbb_wr16(void)
 static INLINE2 void i_sbb_r8b(void)
 {
     /* Opcode: 0x1a 
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -614,6 +645,8 @@ static INLINE2 void i_sbb_r8b(void)
 static INLINE2 void i_sbb_r16w(void)
 {
     /* Opcode: 0x1b 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -665,6 +698,7 @@ static INLINE2 void i_sbb_ald8(void)
 static INLINE2 void i_sbb_axd16(void)
 {
     /* Opcode: 0x1d 
+       Length: 3
      */
 
     register unsigned src;
@@ -692,6 +726,7 @@ static INLINE2 void i_sbb_axd16(void)
 static INLINE2 void i_push_ds(void)
 {
     /* Opcode: 0x1e 
+       Length: 1
      */
 
     PushSeg(DS);
@@ -701,6 +736,7 @@ static INLINE2 void i_push_ds(void)
 static INLINE2 void i_pop_ds(void)
 {
     /* Opcode: 0x1f 
+       Length: 1
      */
     PopSeg(c_ds,DS);
 }
@@ -709,7 +745,8 @@ static INLINE2 void i_pop_ds(void)
 
 static INLINE2 void i_es(void)
 {
-    /* Opcode: 0x26 
+    /* Opcode: 0x26
+       Attr: IsPrefix
      */
 
     c_ds = c_ss = c_es;
@@ -748,6 +785,8 @@ static INLINE2 void i_daa(void)
 static INLINE2 void i_sub_br8(void)
 {
     /* Opcode: 0x28 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -773,6 +812,8 @@ static INLINE2 void i_sub_br8(void)
 static INLINE2 void i_sub_wr16(void)
 {
     /* Opcode: 0x29 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -798,6 +839,8 @@ static INLINE2 void i_sub_wr16(void)
 static INLINE2 void i_sub_r8b(void)
 {
     /* Opcode: 0x2a 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -822,6 +865,8 @@ static INLINE2 void i_sub_r8b(void)
 static INLINE2 void i_sub_r16w(void)
 {
     /* Opcode: 0x2b 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -847,6 +892,7 @@ static INLINE2 void i_sub_r16w(void)
 static INLINE2 void i_sub_ald8(void)
 {
     /* Opcode: 0x2c 
+       Length: 2
      */
 
     register unsigned src = GetMemInc(c_cs,ip);
@@ -869,6 +915,7 @@ static INLINE2 void i_sub_ald8(void)
 static INLINE2 void i_sub_axd16(void)
 {
     /* Opcode: 0x2d 
+       Length: 3
      */
 
     register unsigned src;
@@ -894,6 +941,7 @@ static INLINE2 void i_sub_axd16(void)
 static INLINE2 void i_cs(void)
 {
     /* Opcode: 0x2e 
+       Attr: IsPrefix
      */
 
     c_ds = c_ss = c_cs;
@@ -910,6 +958,7 @@ static INLINE2 void i_cs(void)
 static INLINE2 void i_ss(void)
 {
     /* Opcode: 0x36 
+       Length: 3
      */
 
     c_ds = c_ss;
@@ -922,6 +971,7 @@ static INLINE2 void i_ss(void)
 static INLINE2 void i_aaa(void)
 {
     /* Opcode: 0x37 
+       Length: 1
      */
     if ((*bregs[AL] & 0x0f) > 9 || AF) {
 	*bregs[AL] += 6;
@@ -939,6 +989,8 @@ static INLINE2 void i_aaa(void)
 static INLINE2 void i_cmp_br8(void)
 {
     /* Opcode: 0x38 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -959,7 +1011,9 @@ static INLINE2 void i_cmp_br8(void)
 
 static INLINE2 void i_cmp_wr16(void)
 {
-    /* Opcode: 0x39 
+    /* Opcode: 0x39
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -983,6 +1037,8 @@ static INLINE2 void i_cmp_wr16(void)
 static INLINE2 void i_cmp_r8b(void)
 {
     /* Opcode: 0x3a 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -1003,6 +1059,8 @@ static INLINE2 void i_cmp_r8b(void)
 static INLINE2 void i_cmp_r16w(void)
 {
     /* Opcode: 0x3b 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1026,6 +1084,7 @@ static INLINE2 void i_cmp_r16w(void)
 static INLINE2 void i_cmp_ald8(void)
 {
     /* Opcode: 0x3c 
+       Length: 2
      */
 
     register unsigned src = GetMemInc(c_cs,ip);
@@ -1046,6 +1105,7 @@ static INLINE2 void i_cmp_ald8(void)
 static INLINE2 void i_cmp_axd16(void)
 {
     /* Opcode: 0x3d 
+       Length: 3
      */
 
     register unsigned src;
@@ -1081,6 +1141,7 @@ static INLINE2 void i_ds(void)
 static INLINE2 void i_aas(void)
 {
     /* Opcode: 0x3f 
+       Length: 1
      */
     if ((*bregs[AL] & 0x0f) > 9 || AF) {
 	*bregs[AL] -= 6;
@@ -1098,6 +1159,7 @@ static INLINE2 void i_aas(void)
 static INLINE2 void i_inc_ax(void)
 {
     /* Opcode: 0x40 
+       Length: 1
      */
     IncWordReg(AX);
 }
@@ -1106,6 +1168,7 @@ static INLINE2 void i_inc_ax(void)
 static INLINE2 void i_inc_cx(void)
 {
     /* Opcode: 0x41 
+       Length: 1
      */
     IncWordReg(CX);
 }
@@ -1114,6 +1177,7 @@ static INLINE2 void i_inc_cx(void)
 static INLINE2 void i_inc_dx(void)
 {
     /* Opcode: 0x42 
+       Length: 1
      */
     IncWordReg(DX);
 }
@@ -1122,6 +1186,7 @@ static INLINE2 void i_inc_dx(void)
 static INLINE2 void i_inc_bx(void)
 {
     /* Opcode: 0x43 
+       Length: 1
      */
     IncWordReg(BX);
 }
@@ -1146,6 +1211,7 @@ static INLINE2 void i_inc_bp(void)
 static INLINE2 void i_inc_si(void)
 {
     /* Opcode: 0x46 
+       Length: 1
      */
     IncWordReg(SI);
 }
@@ -1154,6 +1220,7 @@ static INLINE2 void i_inc_si(void)
 static INLINE2 void i_inc_di(void)
 {
     /* Opcode: 0x47 
+       Length: 1
      */
     IncWordReg(DI);
 }
@@ -1162,6 +1229,7 @@ static INLINE2 void i_inc_di(void)
 static INLINE2 void i_dec_ax(void)
 {
     /* Opcode: 0x48 
+       Length: 1
      */
     DecWordReg(AX);
 }
@@ -1170,6 +1238,7 @@ static INLINE2 void i_dec_ax(void)
 static INLINE2 void i_dec_cx(void)
 {
     /* Opcode: 0x49 
+       Length: 1
      */
     DecWordReg(CX);
 }
@@ -1178,6 +1247,7 @@ static INLINE2 void i_dec_cx(void)
 static INLINE2 void i_dec_dx(void)
 {
     /* Opcode: 0x4a 
+       Length: 1
      */
     DecWordReg(DX);
 }
@@ -1186,6 +1256,7 @@ static INLINE2 void i_dec_dx(void)
 static INLINE2 void i_dec_bx(void)
 {
     /* Opcode: 0x4b 
+       Length: 1
      */
     DecWordReg(BX);
 }
@@ -1194,6 +1265,7 @@ static INLINE2 void i_dec_bx(void)
 static INLINE2 void i_dec_sp(void)
 {
     /* Opcode: 0x4c 
+       Length: 1
      */
     DecWordReg(SP);
 }
@@ -1210,6 +1282,7 @@ static INLINE2 void i_dec_bp(void)
 static INLINE2 void i_dec_si(void)
 {
     /* Opcode: 0x4e 
+       Length: 1
      */
     DecWordReg(SI);
 }
@@ -1218,6 +1291,7 @@ static INLINE2 void i_dec_si(void)
 static INLINE2 void i_dec_di(void)
 {
     /* Opcode: 0x4f 
+       Length: 1
      */
     DecWordReg(DI);
 }
@@ -1226,6 +1300,7 @@ static INLINE2 void i_dec_di(void)
 static INLINE2 void i_push_ax(void)
 {
     /* Opcode: 0x50 
+       Length: 1
      */
     PushWordReg(AX);
 }
@@ -1234,6 +1309,7 @@ static INLINE2 void i_push_ax(void)
 static INLINE2 void i_push_cx(void)
 {
     /* Opcode: 0x51 
+       Length: 1
      */
     PushWordReg(CX);
 }
@@ -1242,6 +1318,7 @@ static INLINE2 void i_push_cx(void)
 static INLINE2 void i_push_dx(void)
 {
     /* Opcode: 0x52 
+       Length: 1
      */
     PushWordReg(DX);
 }
@@ -1250,6 +1327,7 @@ static INLINE2 void i_push_dx(void)
 static INLINE2 void i_push_bx(void)
 {
     /* Opcode: 0x53 
+       Length: 1
      */
     PushWordReg(BX);
 }
@@ -1266,6 +1344,7 @@ static INLINE2 void i_push_sp(void)
 static INLINE2 void i_push_bp(void)
 {
     /* Opcode: 0x55 
+       Length: 1
      */
     PushWordReg(BP);
 }
@@ -1275,6 +1354,7 @@ static INLINE2 void i_push_bp(void)
 static INLINE2 void i_push_si(void)
 {
     /* Opcode: 0x56 
+       Length: 1
      */
     PushWordReg(SI);
 }
@@ -1283,6 +1363,7 @@ static INLINE2 void i_push_si(void)
 static INLINE2 void i_push_di(void)
 {
     /* Opcode: 0x57 
+       Length: 1
      */
     PushWordReg(DI);
 }
@@ -1291,6 +1372,7 @@ static INLINE2 void i_push_di(void)
 static INLINE2 void i_pop_ax(void)
 {
     /* Opcode: 0x58 
+       Length: 1
      */
     PopWordReg(AX);
 }
@@ -1299,6 +1381,7 @@ static INLINE2 void i_pop_ax(void)
 static INLINE2 void i_pop_cx(void)
 {
     /* Opcode: 0x59 
+       Length: 1
      */
     PopWordReg(CX);
 }
@@ -1307,6 +1390,7 @@ static INLINE2 void i_pop_cx(void)
 static INLINE2 void i_pop_dx(void)
 {
     /* Opcode: 0x5a 
+       Length: 1
      */
     PopWordReg(DX);
 }
@@ -1315,6 +1399,7 @@ static INLINE2 void i_pop_dx(void)
 static INLINE2 void i_pop_bx(void)
 {
     /* Opcode: 0x5b 
+       Length: 1
      */
     PopWordReg(BX);
 }
@@ -1331,6 +1416,7 @@ static INLINE2 void i_pop_sp(void)
 static INLINE2 void i_pop_bp(void)
 {
     /* Opcode: 0x5d 
+       Length: 1
      */
     PopWordReg(BP);
 }
@@ -1339,6 +1425,7 @@ static INLINE2 void i_pop_bp(void)
 static INLINE2 void i_pop_si(void)
 {
     /* Opcode: 0x5e 
+       Length: 1
      */
     PopWordReg(SI);
 }
@@ -1347,6 +1434,7 @@ static INLINE2 void i_pop_si(void)
 static INLINE2 void i_pop_di(void)
 {
     /* Opcode: 0x5f 
+       Length: 1
      */
     PopWordReg(DI);
 }
@@ -1388,7 +1476,9 @@ static INLINE2 void i_outs_dx_rm16(void)
 
 static INLINE2 void i_80pre(void)
 {
-    /* Opcode: 0x80 
+    /* Opcode: 0x80
+       Length: 3
+       Attr: HasModRMRMB
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
     BYTE *dest = GetModRMRMB(ModRM);
@@ -1505,7 +1595,9 @@ static INLINE2 void i_80pre(void)
 
 static INLINE2 void i_81pre(void)
 {
-    /* Opcode: 0x81 
+    /* Opcode: 0x81
+       Length: 4
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1625,7 +1717,11 @@ static INLINE2 void i_81pre(void)
 static INLINE2 void i_83pre(void)
 {
     /* Opcode: 0x83 
+       Length: 3
+       Attr: IsPrefix
+       Attr: HasModRMRMW
      */
+    /*        PENDING */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *dest = GetModRMRMW(ModRM);
@@ -1744,6 +1840,8 @@ static INLINE2 void i_83pre(void)
 static INLINE2 void i_test_br8(void)
 {
     /* Opcode: 0x84 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -1761,6 +1859,8 @@ static INLINE2 void i_test_br8(void)
 static INLINE2 void i_test_wr16(void)
 {
     /* Opcode: 0x85 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1779,6 +1879,8 @@ static INLINE2 void i_test_wr16(void)
 static INLINE2 void i_xchg_br8(void)
 {
     /* Opcode: 0x86 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -1795,6 +1897,8 @@ static INLINE2 void i_xchg_br8(void)
 static INLINE2 void i_xchg_wr16(void)
 {
     /* Opcode: 0x87 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1816,6 +1920,8 @@ static INLINE2 void i_xchg_wr16(void)
 static INLINE2 void i_mov_br8(void)
 {
     /* Opcode: 0x88 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1829,6 +1935,9 @@ static INLINE2 void i_mov_br8(void)
 static INLINE2 void i_mov_wr16(void)
 {
     /* Opcode: 0x89 
+       Length: 2
+       Args: ModRMW
+       Attr: HasModRMRMW
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1841,7 +1950,10 @@ static INLINE2 void i_mov_wr16(void)
 
 static INLINE2 void i_mov_r8b(void)
 {
-    /* Opcode: 0x8a 
+    /* Opcode: 0x8a
+       Length: 2
+       Args: ModRMB
+       Attr: HasModRMRMB
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1855,6 +1967,8 @@ static INLINE2 void i_mov_r8b(void)
 static INLINE2 void i_mov_r16w(void)
 {
     /* Opcode: 0x8b 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1868,6 +1982,8 @@ static INLINE2 void i_mov_r16w(void)
 static INLINE2 void i_mov_wsreg(void)
 {
     /* Opcode: 0x8c 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1880,6 +1996,7 @@ static INLINE2 void i_mov_wsreg(void)
 static INLINE2 void i_lea(void)
 {
     /* Opcode: 0x8d 
+       Length: 3
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1900,9 +2017,11 @@ static INLINE2 void i_lea(void)
 
 static INLINE2 void i_mov_sregw(void)
 {
-    /* Opcode: 0x8e 
+    /* Opcode: 0x8e
+       Attr: IsPrefix,HasModRMRMW
      */
-    
+    /* PENDING */
+
     static int multiple = 0;
     register unsigned ModRM = GetMemInc(c_cs,ip);
     register WORD *src = GetModRMRMW(ModRM);
@@ -1943,7 +2062,9 @@ static INLINE2 void i_mov_sregw(void)
 
 static INLINE2 void i_popw(void)
 {
-    /* Opcode: 0x8f 
+    /* Opcode: 0x8f
+       Length: 2
+       Attr: HasModRMRMW
      */
     
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1959,6 +2080,7 @@ static INLINE2 void i_popw(void)
 static INLINE2 void i_nop(void)
 {
     /* Opcode: 0x90 
+       Length: 1
      */
 }
 
@@ -1966,6 +2088,7 @@ static INLINE2 void i_nop(void)
 static INLINE2 void i_xchg_axcx(void)
 {
     /* Opcode: 0x91 
+       Length: 1
      */
     XchgAXReg(CX);
 }
@@ -1974,6 +2097,7 @@ static INLINE2 void i_xchg_axcx(void)
 static INLINE2 void i_xchg_axdx(void)
 {
     /* Opcode: 0x92 
+       Length: 1
      */
     XchgAXReg(DX);
 }
@@ -1982,6 +2106,7 @@ static INLINE2 void i_xchg_axdx(void)
 static INLINE2 void i_xchg_axbx(void)
 {
     /* Opcode: 0x93 
+       Length: 1
      */
     XchgAXReg(BX);
 }
@@ -2006,6 +2131,7 @@ static INLINE2 void i_xchg_axbp(void)
 static INLINE2 void i_xchg_axsi(void)
 {
     /* Opcode: 0x96 
+       Length: 1
      */
     XchgAXReg(SI);
 }
@@ -2014,6 +2140,7 @@ static INLINE2 void i_xchg_axsi(void)
 static INLINE2 void i_xchg_axdi(void)
 {
     /* Opcode: 0x97 
+       Length: 1
      */
     XchgAXReg(DI);
 }
@@ -2021,6 +2148,7 @@ static INLINE2 void i_xchg_axdi(void)
 static INLINE2 void i_cbw(void)
 {
     /* Opcode: 0x98 
+       Length: 1
      */
 
     *bregs[AH] = (*bregs[AL] & 0x80) ? 0xff : 0;
@@ -2029,6 +2157,7 @@ static INLINE2 void i_cbw(void)
 static INLINE2 void i_cwd(void)
 {
     /* Opcode: 0x99 
+       Length: 1
      */
 
     wregs[DX] = (*bregs[AH] & 0x80) ? ChangeE(0xffff) : ChangeE(0);
@@ -2038,6 +2167,7 @@ static INLINE2 void i_cwd(void)
 static INLINE2 void i_call_far(void)
 {
     /* Opcode: 0x9a
+       Attr: IsJump,IsCall
      */
     register unsigned tmp, tmp1, tmp2;
 
@@ -2077,6 +2207,7 @@ static INLINE2 void i_wait(void)
 static INLINE2 void i_pushf(void)
 {
     /* Opcode: 0x9c 
+       Length: 1
      */
 
     register unsigned tmp1 = (ReadWord(&wregs[SP])-2);
@@ -2090,6 +2221,7 @@ static INLINE2 void i_pushf(void)
 static INLINE2 void i_popf(void)
 {
     /* Opcode: 0x9d 
+       Length: 1
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2131,6 +2263,7 @@ static INLINE2 void i_lahf(void)
 static INLINE2 void i_mov_aldisp(void)
 {
     /* Opcode: 0xa0 
+       Length: 3
      */
 
     register unsigned addr;
@@ -2145,6 +2278,7 @@ static INLINE2 void i_mov_aldisp(void)
 static INLINE2 void i_mov_axdisp(void)
 {
     /* Opcode: 0xa1 
+       Length: 3
      */
 
     register unsigned addr;
@@ -2160,6 +2294,7 @@ static INLINE2 void i_mov_axdisp(void)
 static INLINE2 void i_mov_dispal(void)
 {
     /* Opcode: 0xa2 
+       Length: 3
      */
 
     register unsigned addr;
@@ -2174,6 +2309,7 @@ static INLINE2 void i_mov_dispal(void)
 static INLINE2 void i_mov_dispax(void)
 {
     /* Opcode: 0xa3 
+       Length: 3
      */
 
     register unsigned addr;
@@ -2189,6 +2325,7 @@ static INLINE2 void i_mov_dispax(void)
 static INLINE2 void i_movsb(void)
 {
     /* Opcode: 0xa4 
+       Length: 1
      */
 
     register unsigned di = ReadWord(&wregs[DI]);
@@ -2196,7 +2333,7 @@ static INLINE2 void i_movsb(void)
 
     BYTE tmp = GetMemB(c_ds,si);
 
-    PutMemB(c_es,di, tmp);
+    PutMemB(c_es, di, tmp);
 
     di += -2*DF +1;
     si += -2*DF +1;
@@ -2209,6 +2346,7 @@ static INLINE2 void i_movsb(void)
 static INLINE2 void i_movsw(void)
 {
     /* Opcode: 0xa5 
+       Length: 1
      */
 
     register unsigned di = ReadWord(&wregs[DI]);
@@ -2285,6 +2423,7 @@ static INLINE2 void i_cmpsw(void)
 static INLINE2 void i_test_ald8(void)
 {
     /* Opcode: 0xa8 
+       Length: 2
      */
 
     register unsigned tmp1 = (unsigned)*bregs[AL];
@@ -2301,6 +2440,7 @@ static INLINE2 void i_test_ald8(void)
 static INLINE2 void i_test_axd16(void)
 {
     /* Opcode: 0xa9 
+       Length: 3
      */
 
     register unsigned tmp1 = (unsigned)ReadWord(&wregs[AX]);
@@ -2319,6 +2459,7 @@ static INLINE2 void i_test_axd16(void)
 static INLINE2 void i_stosb(void)
 {
     /* Opcode: 0xaa 
+       Length: 1
      */
 
     register unsigned di = ReadWord(&wregs[DI]);
@@ -2331,6 +2472,7 @@ static INLINE2 void i_stosb(void)
 static INLINE2 void i_stosw(void)
 {
     /* Opcode: 0xab 
+       Length: 1
      */
 
     register unsigned di = ReadWord(&wregs[DI]);
@@ -2344,6 +2486,7 @@ static INLINE2 void i_stosw(void)
 static INLINE2 void i_lodsb(void)
 {
     /* Opcode: 0xac 
+       Length: 1
      */
 
     register unsigned si = ReadWord(&wregs[SI]);
@@ -2356,6 +2499,7 @@ static INLINE2 void i_lodsb(void)
 static INLINE2 void i_lodsw(void)
 {
     /* Opcode: 0xad 
+       Length: 1
      */
 
     register unsigned si = ReadWord(&wregs[SI]);
@@ -2369,6 +2513,7 @@ static INLINE2 void i_lodsw(void)
 static INLINE2 void i_scasb(void)
 {
     /* Opcode: 0xae 
+       Length: 1
      */
 
     unsigned di = ReadWord(&wregs[DI]);
@@ -2394,6 +2539,7 @@ static INLINE2 void i_scasb(void)
 static INLINE2 void i_scasw(void)
 {
     /* Opcode: 0xaf 
+       Length: 1
      */
 
     unsigned di = ReadWord(&wregs[DI]);
@@ -2418,6 +2564,7 @@ static INLINE2 void i_scasw(void)
 static INLINE2 void i_mov_ald8(void)
 {
     /* Opcode: 0xb0 
+       Length: 2
      */
 
     *bregs[AL] = GetMemInc(c_cs,ip);
@@ -2427,6 +2574,7 @@ static INLINE2 void i_mov_ald8(void)
 static INLINE2 void i_mov_cld8(void)
 {
     /* Opcode: 0xb1 
+       Length: 2
      */
 
     *bregs[CL] = GetMemInc(c_cs,ip);
@@ -2436,6 +2584,7 @@ static INLINE2 void i_mov_cld8(void)
 static INLINE2 void i_mov_dld8(void)
 {
     /* Opcode: 0xb2 
+       Length: 2
      */
 
     *bregs[DL] = GetMemInc(c_cs,ip);
@@ -2445,6 +2594,7 @@ static INLINE2 void i_mov_dld8(void)
 static INLINE2 void i_mov_bld8(void)
 {
     /* Opcode: 0xb3 
+       Length: 2
      */
 
     *bregs[BL] = GetMemInc(c_cs,ip);
@@ -2454,6 +2604,7 @@ static INLINE2 void i_mov_bld8(void)
 static INLINE2 void i_mov_ahd8(void)
 {
     /* Opcode: 0xb4 
+       Length: 2
      */
 
     *bregs[AH] = GetMemInc(c_cs,ip);
@@ -2463,6 +2614,7 @@ static INLINE2 void i_mov_ahd8(void)
 static INLINE2 void i_mov_chd8(void)
 {
     /* Opcode: 0xb5 
+       Length: 2
      */
 
     *bregs[CH] = GetMemInc(c_cs,ip);
@@ -2472,6 +2624,7 @@ static INLINE2 void i_mov_chd8(void)
 static INLINE2 void i_mov_dhd8(void)
 {
     /* Opcode: 0xb6 
+       Length: 2
      */
 
     *bregs[DH] = GetMemInc(c_cs,ip);
@@ -2481,6 +2634,7 @@ static INLINE2 void i_mov_dhd8(void)
 static INLINE2 void i_mov_bhd8(void)
 {
     /* Opcode: 0xb7 
+       Length: 2
      */
 
     *bregs[BH] = GetMemInc(c_cs,ip);
@@ -2490,6 +2644,7 @@ static INLINE2 void i_mov_bhd8(void)
 static INLINE2 void i_mov_axd16(void)
 {
     /* Opcode: 0xb8 
+       Length: 3
      */
 
     *bregs[AL] = GetMemInc(c_cs,ip);
@@ -2500,6 +2655,7 @@ static INLINE2 void i_mov_axd16(void)
 static INLINE2 void i_mov_cxd16(void)
 {
     /* Opcode: 0xb9 
+       Length: 3
      */
 
     *bregs[CL] = GetMemInc(c_cs,ip);
@@ -2510,6 +2666,7 @@ static INLINE2 void i_mov_cxd16(void)
 static INLINE2 void i_mov_dxd16(void)
 {
     /* Opcode: 0xba 
+       Length: 3
      */
 
     *bregs[DL] = GetMemInc(c_cs,ip);
@@ -2520,6 +2677,7 @@ static INLINE2 void i_mov_dxd16(void)
 static INLINE2 void i_mov_bxd16(void)
 {
     /* Opcode: 0xbb 
+       Length: 3
      */
 
     *bregs[BL] = GetMemInc(c_cs,ip);
@@ -2540,6 +2698,7 @@ static INLINE2 void i_mov_spd16(void)
 static INLINE2 void i_mov_bpd16(void)
 {
     /* Opcode: 0xbd 
+       Length: 3
      */
 
     *bregs[BPL] = GetMemInc(c_cs,ip);
@@ -2550,6 +2709,7 @@ static INLINE2 void i_mov_bpd16(void)
 static INLINE2 void i_mov_sid16(void)
 {
     /* Opcode: 0xbe 
+       Length: 3
      */
 
     *bregs[SIL] = GetMemInc(c_cs,ip);
@@ -2560,6 +2720,7 @@ static INLINE2 void i_mov_sid16(void)
 static INLINE2 void i_mov_did16(void)
 {
     /* Opcode: 0xbf 
+       Length: 3
      */
 
     *bregs[DIL] = GetMemInc(c_cs,ip);
@@ -2570,6 +2731,7 @@ static INLINE2 void i_mov_did16(void)
 static INLINE2 void i_ret_d16(void)
 {
     /* Opcode: 0xc2 
+       Attr: IsJump,IsRet
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2591,6 +2753,7 @@ static INLINE2 void i_ret_d16(void)
 static INLINE2 void i_ret(void)
 {
     /* Opcode: 0xc3 
+       Attr: IsJump,IsRet
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2607,7 +2770,9 @@ static INLINE2 void i_ret(void)
 
 static INLINE2 void i_les_dw(void)
 {
-    /* Opcode: 0xc4 
+    /* Opcode: 0xc4
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2625,6 +2790,8 @@ static INLINE2 void i_les_dw(void)
 static INLINE2 void i_lds_dw(void)
 {
     /* Opcode: 0xc5 
+       Length: 3
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2641,6 +2808,8 @@ static INLINE2 void i_lds_dw(void)
 static INLINE2 void i_mov_bd8(void)
 {
     /* Opcode: 0xc6 
+       Length: 3
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2653,6 +2822,8 @@ static INLINE2 void i_mov_bd8(void)
 static INLINE2 void i_mov_wd16(void)
 {
     /* Opcode: 0xc7 
+       Length: 4
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2668,6 +2839,7 @@ static INLINE2 void i_mov_wd16(void)
 static INLINE2 void i_retf_d16(void)
 {
     /* Opcode: 0xca 
+       Attr: IsJump,IsRet
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2692,6 +2864,7 @@ static INLINE2 void i_retf_d16(void)
 static INLINE2 void i_retf(void)
 {
     /* Opcode: 0xcb 
+       Attr: IsJump,IsRet
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2720,7 +2893,8 @@ static INLINE2 void i_int3(void)
 
 static INLINE2 void i_int(void)
 {
-    /* Opcode: 0xcd 
+    /* Opcode: 0xcd
+       Attr: IsJump
      */
 
     unsigned int_num = GetMemInc(c_cs,ip);
@@ -2742,6 +2916,7 @@ static INLINE2 void i_into(void)
 static INLINE2 void i_iret(void)
 {
     /* Opcode: 0xcf 
+       Attr: IsJump,IsRet
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2767,6 +2942,8 @@ static INLINE2 void i_iret(void)
 static INLINE2 void i_d0pre(void)
 {
     /* Opcode: 0xd0 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2840,6 +3017,7 @@ static INLINE2 void i_d0pre(void)
 static INLINE2 void i_d1pre(void)
 {
     /* Opcode: 0xd1 
+       Attr: HasModRMRMW,IsPrefix
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2917,6 +3095,8 @@ static INLINE2 void i_d1pre(void)
 static INLINE2 void i_d2pre(void)
 {
     /* Opcode: 0xd2 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM;
@@ -3030,6 +3210,8 @@ static INLINE2 void i_d2pre(void)
 static INLINE2 void i_d3pre(void)
 {
     /* Opcode: 0xd3 
+       Length: 2
+       Attr: HasModRMRMW
      */
 
     unsigned ModRM;
@@ -3141,6 +3323,7 @@ static INLINE2 void i_d3pre(void)
 static INLINE2 void i_aam(void)
 {
     /* Opcode: 0xd4 
+       Length: 2
      */
     unsigned mult = GetMemInc(c_cs,ip);
 
@@ -3161,6 +3344,7 @@ static INLINE2 void i_aam(void)
 static INLINE2 void i_aad(void)
 {
     /* Opcode: 0xd5 
+       Length: 2
      */
     unsigned mult = GetMemInc(c_cs,ip);
 
@@ -3185,6 +3369,7 @@ static INLINE2 void i_xlat(void)
 static INLINE2 void i_escape(void)
 {
     /* Opcode: 0xd8,0xd9,0xda,0xdb,0xdc,0xdd,0xde,0xdf 
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -3194,6 +3379,7 @@ static INLINE2 void i_escape(void)
 static INLINE2 void i_loopne(void)
 {
     /* Opcode: 0xe0 
+       Attr: IsJump,IsShortJump
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3211,6 +3397,7 @@ static INLINE2 void i_loopne(void)
 static INLINE2 void i_loope(void)
 {
     /* Opcode: 0xe1 
+       Attr: IsJump,IsShortJump
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3228,6 +3415,7 @@ static INLINE2 void i_loope(void)
 static INLINE2 void i_loop(void)
 {
     /* Opcode: 0xe2 
+       Attr: IsJump,IsShortJump
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3245,6 +3433,7 @@ static INLINE2 void i_loop(void)
 static INLINE2 void i_jcxz(void)
 {
     /* Opcode: 0xe3 
+       Attr: IsJump,IsShortJump
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3260,6 +3449,7 @@ static INLINE2 void i_jcxz(void)
 static INLINE2 void i_inal(void)
 {
     /* Opcode: 0xe4 
+       Length: 2
      */
 
     unsigned port = GetMemInc(c_cs,ip);
@@ -3281,6 +3471,7 @@ static INLINE2 void i_inax(void)
 static INLINE2 void i_outal(void)
 {
     /* Opcode: 0xe6 
+       Length: 2
      */
 
     unsigned port = GetMemInc(c_cs,ip);
@@ -3302,6 +3493,7 @@ static INLINE2 void i_outax(void)
 static INLINE2 void i_call_d16(void)
 {
     /* Opcode: 0xe8 
+       Attr: IsJump,IsCall
      */
 
     register unsigned tmp;
@@ -3324,6 +3516,7 @@ static INLINE2 void i_call_d16(void)
 static INLINE2 void i_jmp_d16(void)
 {
     /* Opcode: 0xe9 
+       Attr: IsJump,IsShortJump
      */
 
     register int tmp = GetMemInc(c_cs,ip);
@@ -3341,6 +3534,7 @@ static INLINE2 void i_jmp_d16(void)
 static INLINE2 void i_jmp_far(void)
 {
     /* Opcode: 0xea 
+       Attr: IsJump
      */
 
     register unsigned tmp,tmp1;
@@ -3364,6 +3558,7 @@ static INLINE2 void i_jmp_far(void)
 static INLINE2 void i_jmp_d8(void)
 {
     /* Opcode: 0xeb 
+       Attr: IsJump,IsShortJump
      */
     register int tmp = (int)((INT8)GetMemInc(c_cs,ip));
 
@@ -3378,6 +3573,7 @@ static INLINE2 void i_jmp_d8(void)
 static INLINE2 void i_inaldx(void)
 {
     /* Opcode: 0xec 
+       Length: 1
      */
 
     *bregs[AL] = read_port(ReadWord(&wregs[DX]));
@@ -3421,6 +3617,7 @@ static INLINE2 void i_lock(void)
 static INLINE2 void i_gobios(void)
 {
     /* Opcode: 0xf1 
+       Length: 6
      */
     unsigned intno;
     
@@ -3525,6 +3722,7 @@ static void rep(int flagval)
 static INLINE2 void i_repne(void)
 {
     /* Opcode: 0xf2 
+       Length: 2
      */
 
     rep(0);
@@ -3534,6 +3732,7 @@ static INLINE2 void i_repne(void)
 static INLINE2 void i_repe(void)
 {
     /* Opcode: 0xf3 
+       Length: 2
      */
 
     rep(1);
@@ -3543,6 +3742,7 @@ static INLINE2 void i_repe(void)
 static INLINE2 void i_cmc(void)
 {
     /* Opcode: 0xf5 
+       Length: 1
      */
 
     CF = !CF;
@@ -3552,6 +3752,7 @@ static INLINE2 void i_cmc(void)
 static INLINE2 void i_f6pre(void)
 {
     /* Opcode: 0xf6 
+       Attr: IsPrefix,HasModRMRMB
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
     register BYTE *byte = GetModRMRMB(ModRM);
@@ -3682,7 +3883,8 @@ static INLINE2 void i_f6pre(void)
 
 static INLINE2 void i_f7pre(void)
 {
-    /* Opcode: 0xf7 
+    /* Opcode: 0xf7
+       Attr: IsPrefix,HasModRMRMW
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *wrd = GetModRMRMW(ModRM);
@@ -3825,6 +4027,7 @@ static INLINE2 void i_f7pre(void)
 static INLINE2 void i_clc(void)
 {
     /* Opcode: 0xf8 
+       Length: 1
      */
 
     CF = 0;
@@ -3834,6 +4037,7 @@ static INLINE2 void i_clc(void)
 static INLINE2 void i_stc(void)
 {
     /* Opcode: 0xf9 
+       Length: 1
      */
 
     CF = 1;
@@ -3843,6 +4047,7 @@ static INLINE2 void i_stc(void)
 static INLINE2 void i_cli(void)
 {
     /* Opcode: 0xfa 
+       Length: 1
      */
 
     IF = 0;
@@ -3852,6 +4057,7 @@ static INLINE2 void i_cli(void)
 static INLINE2 void i_sti(void)
 {
     /* Opcode: 0xfb 
+       Length: 1
      */
 
     IF = 1;
@@ -3868,6 +4074,7 @@ static INLINE2 void i_sti(void)
 static INLINE2 void i_cld(void)
 {
     /* Opcode: 0xfc 
+       Length: 1
      */
 
     DF = 0;
@@ -3877,6 +4084,7 @@ static INLINE2 void i_cld(void)
 static INLINE2 void i_std(void)
 {
     /* Opcode: 0xfd 
+       Length: 1
      */
 
     DF = 1;
@@ -3886,6 +4094,8 @@ static INLINE2 void i_std(void)
 static INLINE2 void i_fepre(void)
 {
     /* Opcode: 0xfe 
+       Length: 2
+       Attr: HasModRMRMB
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -3915,7 +4125,9 @@ static INLINE2 void i_fepre(void)
 
 static INLINE2 void i_ffpre(void)
 {
+    /* PENDING: Some are jumps so mark all as such */
     /* Opcode: 0xff 
+       Attr: IsJump,HasModRMRMW
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);

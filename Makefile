@@ -114,7 +114,10 @@ cpu-instr.c: cpu-def.c scripts/*.pl
 cpu-dispatch.c: cpu-instr.c scripts/*.pl
 	perl scripts/genDispatch.pl cpu-instr.c | sort > cpu-dispatch.c
 
-cpu.o:	$(GLOBAL_DEP) cpu.h cpu-instr.c cpu-dispatch.c instr.h debugger.h hardware.h
+cpu-attrs.c: cpu-instr.c scripts/*.pl
+	perl scripts/genIsJumpTable.pl cpu-instr.c > cpu-attrs.c
+
+cpu.o:	$(GLOBAL_DEP) cpu.h cpu-attrs.c cpu-instr.c cpu-dispatch.c instr.h debugger.h hardware.h
 ems.o:	$(GLOBAL_DEP) cpu.h bios.h
 main.o: $(GLOBAL_DEP) bios.h hardware.h video.h
 bios.o: $(GLOBAL_DEP) bios.h cpu.h vga.h vgahard.h debugger.h hardware.h \
@@ -140,5 +143,5 @@ $(PROGNAME): $(OFILES)
 	$(CC) $(CFLAGS) -o $(PROGNAME) $(OFILES) $(LFLAGS) $(LIBRARIES)
 
 clean:
-	rm -f $(PROGNAME) autodetect *.o *~
+	rm -f $(PROGNAME) autodetect cpu-dispatch.c cpu-instr.c *.o *~
 

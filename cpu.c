@@ -293,6 +293,42 @@ void trap(void);
       WriteWord(&wregs[Reg],tmp1); \
 }
 
+enum
+{
+    NO_ATTRS = 0,
+    IS_JUMP = 1,
+    IS_SHORT_JUMP = 2,
+    IS_PREFIX = 4,
+    HAS_MODRM = 8,
+    HAS_MODRMRMB = 16,
+    HAS_MODRMRMW = 32
+};
+
+static const UINT32 cpu_attrs[] = 
+{
+#include "cpu-attrs.c"
+    0
+};
+
+static INLINEP int is_jump(BYTE op)
+{
+    return cpu_attrs[op] & IS_JUMP;
+}
+
+static INLINEP int is_prefix(BYTE op)
+{
+    return cpu_attrs[op] & IS_PREFIX;
+}
+
+static INLINEP int has_modrm(BYTE op)
+{
+    return cpu_attrs[op] & HAS_MODRM;
+}
+
+static INLINEP int has_modrmrmb(BYTE op)
+{
+    return cpu_attrs[op] & HAS_MODRMRMB;
+}
 
 #ifdef PROFILER
 /* The following statistics can be profiled:
@@ -386,6 +422,8 @@ static INT16 can_be_compiled_seed[] =
     -1
 };
 
+static INT8 actual_instr_length[256];
+
 void dump_profiling(void)
 {
     int i;
@@ -426,6 +464,13 @@ void dump_profiling(void)
 	{
 	    printf("0x%06X %u %u\n", i, jump_target_hits[i], bb_length[i]/jump_target_hits[i]);
 	}
+    }
+
+    printf("# Actual instruction length\n");
+
+    for (i = 0; i < NUM_ELEMS(actual_instr_length); i++)
+    {
+	printf("0x%02X %d\n", i, actual_instr_length[i]);
     }
 }
 
@@ -795,6 +840,8 @@ void execute(void)
 #ifdef PROFILER
     BYTE is;
     UINT32 run_length = 0;
+    unsigned last_ip;
+    INT16 last_instr = -1;
 #endif
 
     c_cs = SegToMemPtr(CS);
@@ -805,7 +852,12 @@ void execute(void)
     for(;;)
     {
         if (int_pending)
+	{
+#ifdef PROFILER
+	    last_instr = -1;
+#endif
             external_int();
+	}
 
 #ifdef DEBUGGER
         call_debugger(D_TRACE);
@@ -816,7 +868,55 @@ void execute(void)
 #ifdef PROFILER
 	RecordCodeRead(c_cs + ip);
 
+	if (last_instr >= 0)
+	{
+	    if (is_jump(last_instr) || is_prefix(last_instr))
+	    {
+		actual_instr_length[last_instr] = -1;
+	    }
+	    else if (has_modrm(last_instr))
+	    {
+		int len = ip - last_ip;
+		if (actual_instr_length[last_instr] == 0)
+		{
+		    actual_instr_length[last_instr] = len;
+		}
+		else
+		{
+		    int diff = actual_instr_length[last_instr] - len;
+		    if (diff == 0)
+		    {
+		    }
+		    else
+		    {
+			/* Kind of silly */
+			if (diff != -2 && diff != +2 && diff != -1 && diff != +1)
+			{
+			    printf("diff %d on %02X\n", diff, last_instr);
+			}
+			else if (diff > 0)
+			{
+			    actual_instr_length[last_instr] = len;
+			}
+		    }
+		}
+	    }
+	    else
+	    {
+		if (!(actual_instr_length[last_instr] == 0 ||
+		      actual_instr_length[last_instr] == ip - last_ip))
+		{
+		    printf("%d vs %d now on %02X\n", actual_instr_length[last_instr],
+			   ip - last_ip, last_instr);
+		}
+		actual_instr_length[last_instr] = ip - last_ip;
+	    }
+	}
+
+	last_ip = ip;
+
 	is = GetMemInc(c_cs, ip);
+	last_instr = is;
 	instruction_hits[is]++;
 
 	if (can_be_compiled[is])
