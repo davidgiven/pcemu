@@ -1,0 +1,13 @@
+# This is .pcemurc
+# At present only the following commands are recognised:
+# bootfile diskfile
+# boottype n   (where n=360, 720, 144 or 12)
+# cursorspeed n
+# updatespeed n
+#
+# The following are the defaults (unless changed at compile time)
+
+bootfile /dev/floppy
+boottype 144
+cursorspeed 30
+updatespeed 5
