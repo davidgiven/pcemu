@@ -232,7 +232,7 @@ void trap(void);
       SetZFB(tmp); \
       SetSFB(tmp); \
       SetPF(tmp); \
-      *dest = (BYTE)tmp; \
+      WriteByte(dest, tmp); \
 }
 
 
@@ -247,7 +247,7 @@ void trap(void);
       SetZFB(tmp); \
       SetSFB(tmp); \
       SetPF(tmp); \
-      *dest = (BYTE)tmp; \
+      WriteByte(dest, tmp); \
 }
 
 
@@ -817,7 +817,7 @@ static INLINE2 void i_add_br8(void)
     SetSFB(tmp);
     SetPF(tmp);
 
-    *dest = (BYTE)tmp;
+    WriteByte(dest, tmp);
 }
 
 
@@ -864,7 +864,7 @@ static INLINE2 void i_add_r8b(void)
     SetSFB(tmp);
     SetPF(tmp);
 
-    *dest = (BYTE)tmp;
+    WriteByte(dest, tmp);
 
 }
 
@@ -986,7 +986,7 @@ static INLINE2 void i_adc_br8(void)
     SetSFB(tmp);
     SetPF(tmp);
 
-    *dest = (BYTE)tmp;
+    WriteByte(dest, tmp);
 }
 
 
@@ -1037,7 +1037,7 @@ static INLINE2 void i_adc_r8b(void)
     SetSFB(tmp);
     SetPF(tmp);
 
-    *dest = (BYTE)tmp;
+    WriteByte(dest, tmp);
 }
 
 
@@ -1169,7 +1169,7 @@ static INLINE2 void i_sbb_br8(void)
     SetSFB(tmp);
     SetPF(tmp);
 
-    *dest = (BYTE)tmp;
+    WriteByte(dest, tmp);
 }
 
 
@@ -1220,7 +1220,7 @@ static INLINE2 void i_sbb_r8b(void)
     SetSFB(tmp);
     SetPF(tmp);
 
-    *dest = (BYTE)tmp;
+    WriteByte(dest, tmp);
 
 }
 
@@ -1373,7 +1373,7 @@ static INLINE2 void i_sub_br8(void)
     SetSFB(tmp);
     SetPF(tmp);
 
-    *dest = (BYTE)tmp;
+    WriteByte(dest, tmp);
 
 }
 
@@ -1421,7 +1421,7 @@ static INLINE2 void i_sub_r8b(void)
     SetSFB(tmp);
     SetPF(tmp);
 
-    *dest = (BYTE)tmp;
+    WriteByte(dest, tmp);
 }
 
 
@@ -1985,7 +1985,7 @@ static INLINE2 void i_80pre(void)
         SetSFB(tmp2);
         SetPF(tmp2);
         
-        *dest = (BYTE)tmp2;
+        WriteByte(dest, tmp2);
         break;
     case 0x08:  /* OR eb,d8 */
         tmp |= src;
@@ -1996,7 +1996,7 @@ static INLINE2 void i_80pre(void)
         SetSFB(tmp);
         SetPF(tmp);
         
-        *dest = (BYTE)tmp;
+        WriteByte(dest, tmp);
         break;
     case 0x10:  /* ADC eb,d8 */
         src += CF;
@@ -2010,7 +2010,7 @@ static INLINE2 void i_80pre(void)
         SetSFB(tmp2);
         SetPF(tmp2);
         
-        *dest = (BYTE)tmp2;
+        WriteByte(dest, tmp2);
         break;
     case 0x18:  /* SBB eb,b8 */
         src += CF;
@@ -2026,7 +2026,7 @@ static INLINE2 void i_80pre(void)
         SetSFB(tmp);
         SetPF(tmp);
         
-        *dest = (BYTE)tmp;
+        WriteByte(dest, tmp);
         break;
     case 0x20:  /* AND eb,d8 */
         tmp &= src;
@@ -2037,7 +2037,7 @@ static INLINE2 void i_80pre(void)
         SetSFB(tmp);
         SetPF(tmp);
         
-        *dest = (BYTE)tmp;
+        WriteByte(dest, tmp);
         break;
     case 0x28:  /* SUB eb,d8 */
         tmp2 = tmp;
@@ -2050,7 +2050,7 @@ static INLINE2 void i_80pre(void)
         SetSFB(tmp);
         SetPF(tmp);
         
-        *dest = (BYTE)tmp;
+        WriteByte(dest, tmp);
         break;
     case 0x30:  /* XOR eb,d8 */
         tmp ^= src;
@@ -2061,7 +2061,7 @@ static INLINE2 void i_80pre(void)
         SetSFB(tmp);
         SetPF(tmp);
         
-        *dest = (BYTE)tmp;
+        WriteByte(dest, tmp);
         break;
     case 0x38:  /* CMP eb,d8 */
         tmp2 = tmp;
@@ -2358,8 +2358,8 @@ static INLINE2 void i_xchg_br8(void)
     BYTE tmp;
 
     tmp = *src;
-    *src = *dest;
-    *dest = tmp;
+    WriteByte(src, *dest);
+    WriteByte(dest, tmp);
 }
 
 
@@ -2372,12 +2372,13 @@ static INLINE2 void i_xchg_wr16(void)
     register BYTE *dest = (BYTE *)GetModRMRMW(ModRM);
     BYTE tmp1,tmp2;
 
+    /* PENDING: Optimise this? */
     tmp1 = src[0];
     tmp2 = src[1];
-    src[0] = dest[0];
-    src[1] = dest[1];
-    dest[0] = tmp1;
-    dest[1] = tmp2;
+    WriteByte(src, dest[0]);
+    WriteByte(src+1, dest[1]);
+    WriteByte(dest, tmp1);
+    WriteByte(dest+1, tmp2);
 
 }
 
@@ -2390,7 +2391,7 @@ static INLINE2 void i_mov_br8(void)
     register BYTE src = *GetModRMRegB(ModRM);
     register BYTE *dest = GetModRMRMB(ModRM);
 
-    *dest = src;
+    WriteByte(dest, src);
 }
 
 
@@ -2414,7 +2415,7 @@ static INLINE2 void i_mov_r8b(void)
     register BYTE *dest = GetModRMRegB(ModRM);
     register BYTE src = *GetModRMRMB(ModRM);
 
-    *dest = src;
+    WriteByte(dest, src);
 }
 
 
@@ -3151,8 +3152,10 @@ static INLINE2 void i_mov_wd16(void)
     unsigned ModRM = GetMemInc(c_cs,ip);
     register BYTE *dest = (BYTE *)GetModRMRMW(ModRM);
 
-    *dest++ = GetMemInc(c_cs,ip);
-    *dest = GetMemInc(c_cs,ip);
+    /* PENDING: Optimise */
+    WriteByte(dest, GetMemInc(c_cs,ip));
+    dest++;
+    WriteByte(dest, GetMemInc(c_cs,ip));
 }
 
 
@@ -3248,21 +3251,21 @@ static INLINE2 void i_d0pre(void)
     {
     case 0x00:  /* ROL eb,1 */
         CF = (tmp & 0x80) != 0;
-        *dest = (tmp << 1) + CF;
+        WriteByte(dest, (tmp << 1) + CF);
         OF = !(!(tmp & 0x40)) != CF;
         break;
     case 0x08:  /* ROR eb,1 */
         CF = (tmp & 0x01) != 0;
-        *dest = (tmp >> 1) + (CF << 7);
+        WriteByte(dest, (tmp >> 1) + (CF << 7));
         OF = !(!(tmp & 0x80)) != CF;
         break;
     case 0x10:  /* RCL eb,1 */
         OF = (tmp ^ (tmp << 1)) & 0x80;
-        *dest = (tmp << 1) + CF;
+        WriteByte(dest, (tmp << 1) + CF);
         CF = (tmp & 0x80) != 0;
         break;
     case 0x18:  /* RCR eb,1 */
-        *dest = (tmp >> 1) + (CF << 7);
+        WriteByte(dest, (tmp >> 1) + (CF << 7));
         OF = !(!(tmp & 0x80)) != CF;
         CF = (tmp & 0x01) != 0;
         break;
@@ -3277,7 +3280,7 @@ static INLINE2 void i_d0pre(void)
         SetSFB(tmp);
         SetPF(tmp);
         
-        *dest = (BYTE)tmp;
+        WriteByte(dest, (BYTE)tmp);
         break;
     case 0x28:  /* SHR eb,1 */
         CF = (tmp & 0x01) != 0;
@@ -3289,7 +3292,7 @@ static INLINE2 void i_d0pre(void)
         SetPF(tmp2);
         SetZFB(tmp2);
         AF = 1;
-        *dest = (BYTE)tmp2;
+        WriteByte(dest, (BYTE)tmp2);
         break;
     case 0x38:  /* SAR eb,1 */
         CF = (tmp & 0x01) != 0;
@@ -3301,7 +3304,7 @@ static INLINE2 void i_d0pre(void)
         SetPF(tmp2);
         SetZFB(tmp2);
         AF = 1;
-        *dest = (BYTE)tmp2;
+        WriteByte(dest, (BYTE)tmp2);
         break;
     }
 }
@@ -3413,7 +3416,7 @@ static INLINE2 void i_d2pre(void)
             CF = (tmp & 0x80) != 0;
             tmp = (tmp << 1) + CF;
         }
-        *dest = (BYTE)tmp;
+        WriteByte(dest, (BYTE)tmp);
         break;
     case 0x08:  /* ROR eb,CL */
         for (; count > 0; count--)
@@ -3421,7 +3424,7 @@ static INLINE2 void i_d2pre(void)
             CF = (tmp & 0x01) != 0;
             tmp = (tmp >> 1) + (CF << 7);
         }
-        *dest = (BYTE)tmp;
+        WriteByte(dest, (BYTE)tmp);
         break;
     case 0x10:  /* RCL eb,CL */
         for (; count > 0; count--)
@@ -3430,7 +3433,7 @@ static INLINE2 void i_d2pre(void)
             CF = (tmp & 0x80) != 0;
             tmp = (tmp << 1) + tmp2;
         }
-        *dest = (BYTE)tmp;
+        WriteByte(dest, (BYTE)tmp);
         break;
     case 0x18:  /* RCR eb,CL */
         for (; count > 0; count--)
@@ -3439,7 +3442,7 @@ static INLINE2 void i_d2pre(void)
             CF = (tmp & 0x01) != 0;
             tmp = tmp2;
         }
-        *dest = (BYTE)tmp;
+        WriteByte(dest, (BYTE)tmp);
         break;
     case 0x20:
     case 0x30:  /* SHL eb,CL */
@@ -3459,7 +3462,7 @@ static INLINE2 void i_d2pre(void)
         SetSFB(tmp);
         SetPF(tmp);
         
-        *dest = (BYTE)tmp;
+        WriteByte(dest, (BYTE)tmp);
         break;
     case 0x28:  /* SHR eb,CL */
         if (count >= 9)
@@ -3477,7 +3480,7 @@ static INLINE2 void i_d2pre(void)
         SetPF(tmp);
         SetZFB(tmp);
         AF = 1;
-        *dest = (BYTE)tmp;
+        WriteByte(dest, (BYTE)tmp);
         break;
     case 0x38:  /* SAR eb,CL */
         tmp2 = tmp & 0x80;
@@ -3489,7 +3492,7 @@ static INLINE2 void i_d2pre(void)
         SetPF(tmp);
         SetZFB(tmp);
         AF = 1;
-        *dest = (BYTE)tmp;
+        WriteByte(dest, (BYTE)tmp);
         break;
     }
 }
@@ -3979,7 +3982,7 @@ static INLINE2 void i_f6pre(void)
         break;
         
     case 0x10:	/* NOT Eb */
-        *byte = ~tmp;
+        WriteByte(byte, ~tmp);
         break;
         
     case 0x18:	/* NEG Eb */
@@ -3993,7 +3996,7 @@ static INLINE2 void i_f6pre(void)
         SetSFB(tmp);
         SetPF(tmp);
         
-        *byte = tmp;
+        WriteByte(byte, tmp);
         break;
     case 0x20:	/* MUL AL, Eb */
 	{
@@ -4139,7 +4142,7 @@ static INLINE2 void i_f7pre(void)
 
 	    result = (UINT32)tmp2*tmp;
 	    WriteWord(&wregs[AX],(WORD)result);
-        result >>= 16;
+	    result >>= 16;
 	    WriteWord(&wregs[DX],result);
 
 	    SetZFW(wregs[AX] | wregs[DX]);
@@ -4157,10 +4160,10 @@ static INLINE2 void i_f7pre(void)
 	    SetPF(tmp2);
         
 	    result = (INT32)((INT16)tmp2)*(INT32)((INT16)tmp);
-        OF = (result >> 15 != 0) && (result >> 15 != -1);
+	    OF = (result >> 15 != 0) && (result >> 15 != -1);
 
 	    WriteWord(&wregs[AX],(WORD)result);
-        result = (WORD)(result >> 16);
+	    result = (WORD)(result >> 16);
 	    WriteWord(&wregs[DX],result);
 
 	    SetZFW(wregs[AX] | wregs[DX]);
@@ -4308,7 +4311,7 @@ static INLINE2 void i_fepre(void)
     SetSFB(tmp1);
     SetPF(tmp1);
     
-    *dest = (BYTE)tmp1;
+    WriteByte(dest, (BYTE)tmp1);
 }
 
 
