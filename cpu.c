@@ -4329,7 +4329,7 @@ void execute(void)
         case 0x61:    i_notdone(); break;
         case 0x62:    i_notdone(); break;
         case 0x63:    i_notdone(); break;
-        case 0x64:    i_notdone(); break;
+        case 0x64:    i_notdone(); break;	/* SEG=FS prefix. > 186. */
         case 0x65:    i_notdone(); break;
         case 0x66:    i_notdone(); break;
         case 0x67:    i_notdone(); break;
@@ -4338,7 +4338,7 @@ void execute(void)
         case 0x6a:    i_notdone(); break;
         case 0x6b:    i_notdone(); break;
         case 0x6c:    i_notdone(); break;
-        case 0x6d:    i_notdone(); break;
+        case 0x6d:    i_notdone(); break;	/* INS m16,DX - IN String */
         case 0x6e:    i_outs_dx_rm8(); break;	/* 186 and above */
         case 0x6f:    i_outs_dx_rm16(); break;	/* 186 and above */
         case 0x70:    i_jo(); break;

@@ -18,6 +18,9 @@ Norton Utils 6.0                  Xtree Professional 1.1
 PowerMeter Utils                  Autoroute (ancient version)
 Minitab 8.0                       Microsoft Diagnostics
 
+FreeDOS beta 4 (http://www.freedos.org/) works fine.  Beta 5 seems to
+use the 386 instruction set and hence wont load.
+
 This is all the programs I could lay my hands on which were text based
 and could run on an 8086
 
@@ -100,18 +103,29 @@ instructions...
 At present this file allows a few things to be changed at run time. If this
 file is found (either in the current directory or in your home directory),
 then it is read and parsed and the values overwriting the equivalent
-compile time options. Currently the only options supported at present are:
+compile time options.
 
-bootfile diskfile       
+floppy <num> <file> <sectors> <cyl> <heads>
 
-where diskfile is the disk image you want to boot from (no quotes or
-anything are needed and the filename must not contain white spaces).
+where
+	<num> is 0 or 1 (A: or B:).
+	<file> is the disk image to use.
+	<sectors>, <cyl>, <heads> specifies the geometry of the drive.
 
-boottype type
+For example, to load the FreeDOS beta4 mini boot image
+floppy 0 mini.bin 18 80 2
 
-where type is either 360, 720, 144 or 12. This tells the emulator the type
-of disk the disk image file represents (360k, 720k, 1.44MB, 1.2MB
-respectively).
+harddrive <num> <file> <sectors> <cyl> <heads>
+
+where all the fields are as above for floppy.
+
+video <mode>
+
+where
+	<mode> is currently one of curses or X.
+
+curses uses the curses library to run directly on the console.  X pops
+up a seperate X window.
 
 updatespeed n
 
@@ -129,7 +143,7 @@ take a fair amount of bandwidth and so on slow/heavily loaded networks it
 may be best to slow down the cursor flashing. Setting n to 0 or less will
 disable cursor flashing - the cursor will be permanently on.
 
-An example .pcemurc file can be found in this directory.
+An example .pcemurc file can be found in this directory in new.pcemurc.
 
 If you have problems compiling or running the emulator, then please contact
 me giving details of what went wrong (along with your computer type

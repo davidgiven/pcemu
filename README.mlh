@@ -13,9 +13,7 @@ boot.  Some were hooked in but not implemented (especially the mul
 instructions).
 
 The code was updated to compile cleanly against glibc 2.2.1.  It has
-been tested under Debian 2.2-powerpc.  There is some weird memory
-allocation bug, such that it only runs with electric fence installed
-on my system.  This will be tracked down.
+been tested under Debian 2.2-powerpc.
 
 Michael Hope
 michaelh@juju.net.nz
