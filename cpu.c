@@ -311,6 +311,21 @@ enum
     HAS_MODRMRMW = 512
 };
 
+enum
+{
+    FLAG_None = 0,
+    FLAG_CF = 1, 
+    FLAG_PF = 2, 
+    FLAG_TF = 4, 
+    FLAG_AF = 8,
+    FLAG_ZF = 16, 
+    FLAG_SF = 32,
+    FLAG_IF = 64, 
+    FLAG_DF = 128,
+    FLAG_OF = 256,
+    FLAGS_ALL = FLAG_CF | FLAG_PF | FLAG_ZF | FLAG_TF | FLAG_IF | FLAG_DF | FLAG_AF | FLAG_OF | FLAG_SF
+};
+
 #include "cpu-attrs.c"
 
 static INLINEP int is_jump(BYTE op)
@@ -440,6 +455,10 @@ static UINT32 total_translatable_bytes;
 static UINT32 total_translatable_blocks;
 static UINT32 run_spoilers[256];
 
+static UINT32 flag_eval_hits;
+static UINT32 flag_eval_skips;
+static UINT32 flag_eval_spoilers[256];
+
 void dump_profiling(void)
 {
     int i;
@@ -503,6 +522,21 @@ void dump_profiling(void)
     for (i = 0; i < NUM_ELEMS(run_spoilers); i++)
     {
 	printf("0x%02X %d\n", i, run_spoilers[i]);
+    }
+
+    printf("# Flag eval hits and skips\n");
+
+    printf("flag_eval_hits: %u\n"
+	   "flag_eval_skips: %u\n",
+	   flag_eval_hits,
+	   flag_eval_skips);
+
+
+    printf("# Flag eval spoilers\n");
+
+    for (i = 0; i < NUM_ELEMS(flag_eval_spoilers); i++)
+    {
+	printf("0x%02X %d\n", i, flag_eval_spoilers[i]);
     }
 }
 
@@ -921,6 +955,11 @@ static int is_8e_translatable(unsigned sip)
 static void scan_for_translation(void)
 {
     unsigned sip = ip;
+    int i;
+    /* PENDING: To constant */
+    BYTE *sources[9];
+
+    memset(sources, 0, sizeof(sources));
 
     /* Scan while we know how long this instruction is and while it is
        not a jump or something special. */
@@ -979,12 +1018,72 @@ static void scan_for_translation(void)
 		break;
 	    }
 	}
+
+	/* This instruction may require flags to be evaluated.  Scan
+	   what it uses and marked the generating instructions.
+	*/
+	if (uses_flags[ic])
+	{
+	    int flag = 0;
+	    int uses = uses_flags[ic];
+
+	    while (uses)
+	    {
+		if (sources[flag] != NULL)
+		{
+		    flag_eval_hits++;
+		    sources[flag] = NULL;
+		    flag_eval_spoilers[ic]++;
+		}
+		else
+		{
+		    /* Flag is already evaluated */
+		}
+		/* PENDING: Pull the bit count flag trick */
+		uses >>= 1;
+		flag++;
+	    }
+	}
+	/* This instruction may change the state of some flags.  Scan
+	   what it generates and record them for later lazy
+	   evaluation.
+	*/
+	if (changes_flags[ic])
+	{
+	    int flag = 0;
+	    int changes = changes_flags[ic];
+
+	    while (changes)
+	    {
+		if (sources[flag] != NULL)
+		{
+		    flag_eval_skips++;
+		}
+		sources[flag] = c_cs + sip;
+		/* PENDING: Pull the bit count flag trick */
+		changes >>= 1;
+		flag++;
+	    }
+	}
+
 	sip += cpu_length[ic];
 	if (has_modrm(ic))
 	{
 	    sip += get_modrm_length(ic);
 	}
     } while (1);
+
+    /* We end translation on an instruction we don't recognise or a
+	jump.  In both cases the flags must be evaluated as we don't
+	know what happens after this.
+    */
+    for (i = 0; i < NUM_ELEMS(sources); i++)
+    {
+	if (sources[i] != NULL)
+	{
+	    flag_eval_hits++;
+	}
+    }
 
     printf("Found translatable block len %d\n", sip - ip);
     if ((sip - ip) > 0)

@@ -4,6 +4,8 @@ static INLINE2 void i_#{$name}#_br8(void)
     /* Opcode: #{$opcode}# 
        Length: 2
        Attr: HasModRMRMB
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
     register unsigned src = (unsigned)*GetModRMRegB(ModRM);
@@ -23,6 +25,8 @@ static INLINE2 void i_#{$name}#_wr16(void)
     /* Opcode: #{$opcode}# 
        Length: 2
        Attr: HasModRMRMW
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *src = GetModRMRegW(ModRM);
@@ -43,6 +47,8 @@ static INLINE2 void i_#{$name}#_r8b(void)
     /* Opcode: #{$opcode}# 
        Length: 2
        Attr: HasModRMRMB
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
     register unsigned src = (unsigned)*GetModRMRMB(ModRM);
@@ -62,6 +68,8 @@ static INLINE2 void i_#{$name}#_r16w(void)
     /* Opcode: #{$opcode}# 
        Length: 2
        Attr: HasModRMRMW
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *dest = GetModRMRegW(ModRM);
@@ -81,6 +89,8 @@ static INLINE2 void i_#{$name}#_ald8(void)
 {
     /* Opcode: #{$opcode}# 
        Length: 2
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
     register unsigned tmp = *bregs[AL];
     tmp #{$op}#= (unsigned)GetMemInc(c_cs,ip);
@@ -96,6 +106,8 @@ static INLINE2 void i_#{$name}#_axd16(void)
 {
     /* Opcode: #{$opcode}# 
        Length: 3
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
     register unsigned src;
     register unsigned tmp = ReadWord(&wregs[AX]);
@@ -136,6 +148,7 @@ static INLINE2 void i_j#{$name}#(void)
     /* Opcode: #{$opcode}# 
        Attr: IsJump,IsShortJump
        Length: 2
+       UsesFlags: #{$flags}#
      */
     register int tmp;
     PreJumpHook(c_cs + ip);
@@ -146,45 +159,49 @@ static INLINE2 void i_j#{$name}#(void)
     PostJumpHook(c_cs + ip);
 }
 
+/* PENDING: Fix up flags spec.  OK for now as a jump causes all flags
+   to be evaluated. */
 /* 0x70 = Jump if overflow */
-IMPLEMENT JumpCond name=o,cond=OF,opcode=0x70;
+IMPLEMENT JumpCond name=o,cond=OF,opcode=0x70,flags=OF;
 /* 0x71 = Jump if no overflow */
-IMPLEMENT JumpCond name=no,cond=!OF,opcode=0x71;
+IMPLEMENT JumpCond name=no,cond=!OF,opcode=0x71,flags=OF;
 /* 0x72 = Jump if below */
-IMPLEMENT JumpCond name=b,cond=CF,opcode=0x72;
+IMPLEMENT JumpCond name=b,cond=CF,opcode=0x72,flags=CF;
 /* 0x73 = Jump if not below */
-IMPLEMENT JumpCond name=nb,cond=!CF,opcode=0x73;
+IMPLEMENT JumpCond name=nb,cond=!CF,opcode=0x73,flags=CF;
 /* 0x74 = Jump if zero */
-IMPLEMENT JumpCond name=z,cond=ZF,opcode=0x74;
+IMPLEMENT JumpCond name=z,cond=ZF,opcode=0x74,flags=ZF;
 /* 0x75 = Jump if not zero */
-IMPLEMENT JumpCond name=nz,cond=!ZF,opcode=0x75;
+IMPLEMENT JumpCond name=nz,cond=!ZF,opcode=0x75,flags=ZF;
 /* 0x76 = Jump if below or equal */
-IMPLEMENT JumpCond name=be,cond=CF || ZF,opcode=0x76;
+IMPLEMENT JumpCond name=be,cond=CF || ZF,opcode=0x76,flags=CF;
 /* 0x77 = Jump if not below or equal */
-IMPLEMENT JumpCond name=nbe,cond=!(CF || ZF),opcode=0x77;
+IMPLEMENT JumpCond name=nbe,cond=!(CF || ZF),opcode=0x77,flags=CF;
 /* 0x78 = Jump if sign */
-IMPLEMENT JumpCond name=s,cond=SF,opcode=0x78;
+IMPLEMENT JumpCond name=s,cond=SF,opcode=0x78,flags=SF;
 /* 0x79 = Jump if no sign */
-IMPLEMENT JumpCond name=ns,cond=!SF,opcode=0x79;
+IMPLEMENT JumpCond name=ns,cond=!SF,opcode=0x79,flags=SF;
 /* 0x7a = Jump if parity */
-IMPLEMENT JumpCond name=p,cond=PF,opcode=0x7a;
+IMPLEMENT JumpCond name=p,cond=PF,opcode=0x7a,flags=PF;
 /* 0x7b = Jump if no parity */
-IMPLEMENT JumpCond name=np,cond=!PF,opcode=0x7b;
+IMPLEMENT JumpCond name=np,cond=!PF,opcode=0x7b,flags=PF;
 /* 0x7c = Jump if less */
-IMPLEMENT JumpCond name=l,cond=(!(!SF)!=!(!OF))&&!ZF,opcode=0x7c;
+IMPLEMENT JumpCond name=l,cond=(!(!SF)!=!(!OF))&&!ZF,opcode=0x7c,flags=ZF;
 /* 0x7d = Jump if not less */
-IMPLEMENT JumpCond name=nl,cond=ZF||(!(!SF) == !(!OF)),opcode=0x7d;
+IMPLEMENT JumpCond name=nl,cond=ZF||(!(!SF) == !(!OF)),opcode=0x7d,flags=ZF;
 /* 0x7e = Jump if less than or equal */
-IMPLEMENT JumpCond name=le,cond=ZF||(!(!SF) != !(!OF)),opcode=0x7e;
+IMPLEMENT JumpCond name=le,cond=ZF||(!(!SF) != !(!OF)),opcode=0x7e,flags=ZF;
 /* 0x7f = Jump if not less than or equal*/
-IMPLEMENT JumpCond name=nle,cond=(!(!SF)==!(!OF))&&!ZF,opcode=0x7f;
+IMPLEMENT JumpCond name=nle,cond=(!(!SF)==!(!OF))&&!ZF,opcode=0x7f,flags=ZF;
 
 static INLINE2 void i_add_br8(void)
 {
     /* Opcode: 0x00 
        Length: 2
        Attr: HasModRMRMB
-     */
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
+    */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
     register unsigned src = (unsigned)*GetModRMRegB(ModRM);
@@ -210,6 +227,8 @@ static INLINE2 void i_add_wr16(void)
     /* Opcode: 0x01 
        Length: 2
        Attr: HasModRMRMW
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -237,6 +256,8 @@ static INLINE2 void i_add_r8b(void)
     /* Opcode: 0x02 
        Length: 2
        Attr: HasModRMRMB
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -264,6 +285,8 @@ static INLINE2 void i_add_r16w(void)
     /* Opcode: 0x03 
        Length: 2
        Attr: HasModRMRMW
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -290,6 +313,8 @@ static INLINE2 void i_add_ald8(void)
 {
     /* Opcode: 0x04 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
      */
 
     register unsigned src = (unsigned)GetMemInc(c_cs,ip);
@@ -313,6 +338,8 @@ static INLINE2 void i_add_axd16(void)
 {
     /* Opcode: 0x05 
        Length: 3
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: None
      */
 
     register unsigned src;
@@ -339,6 +366,8 @@ static INLINE2 void i_push_es(void)
 {
     /* Opcode: 0x06 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     PushSeg(ES);
@@ -349,6 +378,8 @@ static INLINE2 void i_pop_es(void)
 {
     /* Opcode: 0x07 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopSeg(c_es,ES);
 }
@@ -359,6 +390,8 @@ static INLINE2 void i_push_cs(void)
 {
     /* Opcode: 0x0e 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     PushSeg(CS);
@@ -370,6 +403,8 @@ static INLINE2 void i_adc_br8(void)
     /* Opcode: 0x10 
        Length: 2
        Attr: HasModRMRMB
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -398,6 +433,8 @@ static INLINE2 void i_adc_wr16(void)
     /* Opcode: 0x11 
        Length: 2
        Attr: HasModRMRMW
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -426,6 +463,8 @@ static INLINE2 void i_adc_r8b(void)
 {
     /* Opcode: 0x12 
        Attr: HasModRMRMB
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -454,6 +493,8 @@ static INLINE2 void i_adc_r16w(void)
     /* Opcode: 0x13 
        Length: 2
        Attr: HasModRMRMW
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -482,6 +523,8 @@ static INLINE2 void i_adc_r16w(void)
 static INLINE2 void i_adc_ald8(void)
 {
     /* Opcode: 0x14 
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     register unsigned src = (unsigned)GetMemInc(c_cs,ip)+CF;
@@ -507,6 +550,8 @@ static INLINE2 void i_adc_axd16(void)
 {
     /* Opcode: 0x15 
        Length: 3
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     register unsigned src;
@@ -535,6 +580,8 @@ static INLINE2 void i_push_ss(void)
 {
     /* Opcode: 0x16 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     PushSeg(SS);
@@ -569,6 +616,8 @@ static INLINE2 void i_sbb_br8(void)
 {
     /* Opcode: 0x18 
        Attr: HasModRMRMB
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -597,6 +646,8 @@ static INLINE2 void i_sbb_wr16(void)
     /* Opcode: 0x19 
        Length: 2
        Attr: HasModRMRMW
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -625,6 +676,8 @@ static INLINE2 void i_sbb_r8b(void)
 {
     /* Opcode: 0x1a 
        Attr: HasModRMRMB
+       ChangesFlags: CF,PF,AF,ZF,SF,OF
+       UsesFlags: CF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -654,6 +707,8 @@ static INLINE2 void i_sbb_r16w(void)
     /* Opcode: 0x1b 
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: CF
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -681,6 +736,8 @@ static INLINE2 void i_sbb_r16w(void)
 static INLINE2 void i_sbb_ald8(void)
 {
     /* Opcode: 0x1c 
+       UsesFlags: CF
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     register unsigned src = GetMemInc(c_cs,ip)+CF;
@@ -706,6 +763,8 @@ static INLINE2 void i_sbb_axd16(void)
 {
     /* Opcode: 0x1d 
        Length: 3
+       UsesFlags: CF
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     register unsigned src;
@@ -734,6 +793,8 @@ static INLINE2 void i_push_ds(void)
 {
     /* Opcode: 0x1e 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     PushSeg(DS);
@@ -744,6 +805,8 @@ static INLINE2 void i_pop_ds(void)
 {
     /* Opcode: 0x1f 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopSeg(c_ds,DS);
 }
@@ -755,6 +818,7 @@ static INLINE2 void i_es(void)
     /* Opcode: 0x26
        Attr: IsPrefix
      */
+    /* PENDING: Flags checked */
 
     c_ds = c_ss = c_es;
 
@@ -794,6 +858,8 @@ static INLINE2 void i_sub_br8(void)
     /* Opcode: 0x28 
        Length: 2
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -821,6 +887,8 @@ static INLINE2 void i_sub_wr16(void)
     /* Opcode: 0x29 
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -848,6 +916,8 @@ static INLINE2 void i_sub_r8b(void)
     /* Opcode: 0x2a 
        Length: 2
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -874,6 +944,8 @@ static INLINE2 void i_sub_r16w(void)
     /* Opcode: 0x2b 
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -900,6 +972,8 @@ static INLINE2 void i_sub_ald8(void)
 {
     /* Opcode: 0x2c 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     register unsigned src = GetMemInc(c_cs,ip);
@@ -923,6 +997,8 @@ static INLINE2 void i_sub_axd16(void)
 {
     /* Opcode: 0x2d 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     register unsigned src;
@@ -950,7 +1026,7 @@ static INLINE2 void i_cs(void)
     /* Opcode: 0x2e 
        Attr: IsPrefix
      */
-
+    /* PENDING: Flags */
     c_ds = c_ss = c_cs;
 
     instruction[GetMemInc(c_cs,ip)]();
@@ -980,6 +1056,8 @@ static INLINE2 void i_aaa(void)
 {
     /* Opcode: 0x37 
        Length: 1
+       UsesFlags: AF
+       ChangesFlags: AF,CF
      */
     if ((*bregs[AL] & 0x0f) > 9 || AF) {
 	*bregs[AL] += 6;
@@ -999,6 +1077,8 @@ static INLINE2 void i_cmp_br8(void)
     /* Opcode: 0x38 
        Length: 2
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -1022,6 +1102,8 @@ static INLINE2 void i_cmp_wr16(void)
     /* Opcode: 0x39
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1047,6 +1129,8 @@ static INLINE2 void i_cmp_r8b(void)
     /* Opcode: 0x3a 
        Length: 2
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -1069,6 +1153,8 @@ static INLINE2 void i_cmp_r16w(void)
     /* Opcode: 0x3b 
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1114,6 +1200,8 @@ static INLINE2 void i_cmp_axd16(void)
 {
     /* Opcode: 0x3d 
        Length: 3
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
+       UsesFlags: None
      */
 
     register unsigned src;
@@ -1150,6 +1238,8 @@ static INLINE2 void i_aas(void)
 {
     /* Opcode: 0x3f 
        Length: 1
+       UsesFlags: AF
+       ChangesFlags: AF,CF
      */
     if ((*bregs[AL] & 0x0f) > 9 || AF) {
 	*bregs[AL] -= 6;
@@ -1168,6 +1258,8 @@ static INLINE2 void i_inc_ax(void)
 {
     /* Opcode: 0x40 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     IncWordReg(AX);
 }
@@ -1177,6 +1269,8 @@ static INLINE2 void i_inc_cx(void)
 {
     /* Opcode: 0x41 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     IncWordReg(CX);
 }
@@ -1186,6 +1280,8 @@ static INLINE2 void i_inc_dx(void)
 {
     /* Opcode: 0x42 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     IncWordReg(DX);
 }
@@ -1195,6 +1291,8 @@ static INLINE2 void i_inc_bx(void)
 {
     /* Opcode: 0x43 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     IncWordReg(BX);
 }
@@ -1203,6 +1301,8 @@ static INLINE2 void i_inc_bx(void)
 static INLINE2 void i_inc_sp(void)
 {
     /* Opcode: 0x44 
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     IncWordReg(SP);
 }
@@ -1211,6 +1311,8 @@ static INLINE2 void i_inc_sp(void)
 static INLINE2 void i_inc_bp(void)
 {
     /* Opcode: 0x45 
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     IncWordReg(BP);
 }
@@ -1220,6 +1322,8 @@ static INLINE2 void i_inc_si(void)
 {
     /* Opcode: 0x46 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     IncWordReg(SI);
 }
@@ -1229,6 +1333,8 @@ static INLINE2 void i_inc_di(void)
 {
     /* Opcode: 0x47 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     IncWordReg(DI);
 }
@@ -1238,6 +1344,8 @@ static INLINE2 void i_dec_ax(void)
 {
     /* Opcode: 0x48 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     DecWordReg(AX);
 }
@@ -1247,6 +1355,8 @@ static INLINE2 void i_dec_cx(void)
 {
     /* Opcode: 0x49 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     DecWordReg(CX);
 }
@@ -1256,6 +1366,8 @@ static INLINE2 void i_dec_dx(void)
 {
     /* Opcode: 0x4a 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     DecWordReg(DX);
 }
@@ -1265,6 +1377,8 @@ static INLINE2 void i_dec_bx(void)
 {
     /* Opcode: 0x4b 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     DecWordReg(BX);
 }
@@ -1274,6 +1388,8 @@ static INLINE2 void i_dec_sp(void)
 {
     /* Opcode: 0x4c 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     DecWordReg(SP);
 }
@@ -1282,6 +1398,8 @@ static INLINE2 void i_dec_sp(void)
 static INLINE2 void i_dec_bp(void)
 {
     /* Opcode: 0x4d 
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     DecWordReg(BP);
 }
@@ -1291,6 +1409,8 @@ static INLINE2 void i_dec_si(void)
 {
     /* Opcode: 0x4e 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     DecWordReg(SI);
 }
@@ -1300,6 +1420,8 @@ static INLINE2 void i_dec_di(void)
 {
     /* Opcode: 0x4f 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
     DecWordReg(DI);
 }
@@ -1309,6 +1431,8 @@ static INLINE2 void i_push_ax(void)
 {
     /* Opcode: 0x50 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PushWordReg(AX);
 }
@@ -1318,6 +1442,8 @@ static INLINE2 void i_push_cx(void)
 {
     /* Opcode: 0x51 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PushWordReg(CX);
 }
@@ -1327,6 +1453,8 @@ static INLINE2 void i_push_dx(void)
 {
     /* Opcode: 0x52 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PushWordReg(DX);
 }
@@ -1336,6 +1464,8 @@ static INLINE2 void i_push_bx(void)
 {
     /* Opcode: 0x53 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PushWordReg(BX);
 }
@@ -1344,6 +1474,8 @@ static INLINE2 void i_push_bx(void)
 static INLINE2 void i_push_sp(void)
 {
     /* Opcode: 0x54 
+       UsesFlags: None
+       ChangesFlags: None
      */
     PushWordReg(SP);
 }
@@ -1353,6 +1485,8 @@ static INLINE2 void i_push_bp(void)
 {
     /* Opcode: 0x55 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PushWordReg(BP);
 }
@@ -1363,6 +1497,8 @@ static INLINE2 void i_push_si(void)
 {
     /* Opcode: 0x56 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PushWordReg(SI);
 }
@@ -1372,6 +1508,8 @@ static INLINE2 void i_push_di(void)
 {
     /* Opcode: 0x57 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PushWordReg(DI);
 }
@@ -1381,6 +1519,8 @@ static INLINE2 void i_pop_ax(void)
 {
     /* Opcode: 0x58 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopWordReg(AX);
 }
@@ -1390,6 +1530,8 @@ static INLINE2 void i_pop_cx(void)
 {
     /* Opcode: 0x59 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopWordReg(CX);
 }
@@ -1399,6 +1541,8 @@ static INLINE2 void i_pop_dx(void)
 {
     /* Opcode: 0x5a 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopWordReg(DX);
 }
@@ -1408,6 +1552,8 @@ static INLINE2 void i_pop_bx(void)
 {
     /* Opcode: 0x5b 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopWordReg(BX);
 }
@@ -1416,6 +1562,8 @@ static INLINE2 void i_pop_bx(void)
 static INLINE2 void i_pop_sp(void)
 {
     /* Opcode: 0x5c 
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopWordReg(SP);
 }
@@ -1425,6 +1573,8 @@ static INLINE2 void i_pop_bp(void)
 {
     /* Opcode: 0x5d 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopWordReg(BP);
 }
@@ -1434,6 +1584,8 @@ static INLINE2 void i_pop_si(void)
 {
     /* Opcode: 0x5e 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopWordReg(SI);
 }
@@ -1443,6 +1595,8 @@ static INLINE2 void i_pop_di(void)
 {
     /* Opcode: 0x5f 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
     PopWordReg(DI);
 }
@@ -1450,6 +1604,8 @@ static INLINE2 void i_pop_di(void)
 static INLINE2 void i_push_immed16(void)
 {
     /* Opcode: 0x68 
+       UsesFlags: None
+       ChangesFlags: None
      */
     register unsigned tmp1 = (WORD)(ReadWord(&wregs[SP])-2);
     unsigned val = GetMemInc(c_cs, ip);
@@ -1488,6 +1644,7 @@ static INLINE2 void i_80pre(void)
        Length: 3
        Attr: IsPrefix,HasModRMRMB
      */
+    /* PENDING: Flags checked */
     unsigned ModRM = GetMemInc(c_cs,ip);
     BYTE *dest = GetModRMRMB(ModRM);
     register unsigned src = GetMemInc(c_cs,ip);
@@ -1728,7 +1885,7 @@ static INLINE2 void i_83pre(void)
        Length: 3
        Attr: IsPrefix,HasModRMRMW
      */
-    /*        PENDING */
+    /* PENDING: Flags checked */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *dest = GetModRMRMW(ModRM);
@@ -1849,6 +2006,8 @@ static INLINE2 void i_test_br8(void)
     /* Opcode: 0x84 
        Length: 2
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = (unsigned)GetMemInc(c_cs,ip);
@@ -1906,6 +2065,8 @@ static INLINE2 void i_xchg_wr16(void)
     /* Opcode: 0x87 
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1929,6 +2090,8 @@ static INLINE2 void i_mov_br8(void)
     /* Opcode: 0x88 
        Length: 2
        Attr: HasModRMRMB
+       ChangesFlags: None
+       UsesFlags: None
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1944,6 +2107,8 @@ static INLINE2 void i_mov_wr16(void)
     /* Opcode: 0x89 
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1959,6 +2124,8 @@ static INLINE2 void i_mov_r8b(void)
     /* Opcode: 0x8a
        Length: 2
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1974,6 +2141,8 @@ static INLINE2 void i_mov_r16w(void)
     /* Opcode: 0x8b 
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -1989,6 +2158,8 @@ static INLINE2 void i_mov_wsreg(void)
     /* Opcode: 0x8c 
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2003,6 +2174,8 @@ static INLINE2 void i_lea(void)
     /* Opcode: 0x8d
        Attr: IsPrefix,HasModRMRMW
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
     /* PENDING: Why does this have it's own mod code? */
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2026,7 +2199,7 @@ static INLINE2 void i_mov_sregw(void)
     /* Opcode: 0x8e
        Attr: IsPrefix,HasModRMRMW
      */
-    /* PENDING */
+    /* PENDING: Flags checked */
 
     static int multiple = 0;
     register unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2071,6 +2244,8 @@ static INLINE2 void i_popw(void)
     /* Opcode: 0x8f
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: None
      */
     
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2087,6 +2262,8 @@ static INLINE2 void i_nop(void)
 {
     /* Opcode: 0x90 
        Length: 1
+       ChangesFlags: None
+       UsesFlags: None
      */
 }
 
@@ -2095,6 +2272,8 @@ static INLINE2 void i_xchg_axcx(void)
 {
     /* Opcode: 0x91 
        Length: 1
+       ChangesFlags: None
+       UsesFlags: None
      */
     XchgAXReg(CX);
 }
@@ -2104,6 +2283,8 @@ static INLINE2 void i_xchg_axdx(void)
 {
     /* Opcode: 0x92 
        Length: 1
+       ChangesFlags: None
+       UsesFlags: None
      */
     XchgAXReg(DX);
 }
@@ -2113,6 +2294,8 @@ static INLINE2 void i_xchg_axbx(void)
 {
     /* Opcode: 0x93 
        Length: 1
+       ChangesFlags: None
+       UsesFlags: None
      */
     XchgAXReg(BX);
 }
@@ -2121,6 +2304,8 @@ static INLINE2 void i_xchg_axbx(void)
 static INLINE2 void i_xchg_axsp(void)
 {
     /* Opcode: 0x94 
+       ChangesFlags: None
+       UsesFlags: None
      */
     XchgAXReg(SP);
 }
@@ -2129,6 +2314,8 @@ static INLINE2 void i_xchg_axsp(void)
 static INLINE2 void i_xchg_axbp(void)
 {
     /* Opcode: 0x95 
+       ChangesFlags: None
+       UsesFlags: None
      */
     XchgAXReg(BP);
 }
@@ -2138,6 +2325,8 @@ static INLINE2 void i_xchg_axsi(void)
 {
     /* Opcode: 0x96 
        Length: 1
+       ChangesFlags: None
+       UsesFlags: None
      */
     XchgAXReg(SI);
 }
@@ -2147,6 +2336,8 @@ static INLINE2 void i_xchg_axdi(void)
 {
     /* Opcode: 0x97 
        Length: 1
+       ChangesFlags: None
+       UsesFlags: None
      */
     XchgAXReg(DI);
 }
@@ -2155,6 +2346,8 @@ static INLINE2 void i_cbw(void)
 {
     /* Opcode: 0x98 
        Length: 1
+       ChangesFlags: None
+       UsesFlags: None
      */
 
     *bregs[AH] = (*bregs[AL] & 0x80) ? 0xff : 0;
@@ -2164,6 +2357,8 @@ static INLINE2 void i_cwd(void)
 {
     /* Opcode: 0x99 
        Length: 1
+       ChangesFlags: None
+       UsesFlags: None
      */
 
     wregs[DX] = (*bregs[AH] & 0x80) ? ChangeE(0xffff) : ChangeE(0);
@@ -2216,7 +2411,7 @@ static INLINE2 void i_pushf(void)
     /* Opcode: 0x9c 
        Length: 1
      */
-
+    /* PENDING: Flags checked */
     register unsigned tmp1 = (ReadWord(&wregs[SP])-2);
     WORD tmp2 = CompressFlags() | 0xf000;
 
@@ -2262,7 +2457,9 @@ static INLINE2 void i_sahf(void)
 static INLINE2 void i_lahf(void)
 {
     /* Opcode: 0x9f 
+       ChangesFlags: None
      */
+    /* PENDING: Flags checked */
 
     *bregs[AH] = CompressFlags() & 0xff;
 }
@@ -2271,6 +2468,8 @@ static INLINE2 void i_mov_aldisp(void)
 {
     /* Opcode: 0xa0 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned addr;
@@ -2286,6 +2485,8 @@ static INLINE2 void i_mov_axdisp(void)
 {
     /* Opcode: 0xa1 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned addr;
@@ -2317,6 +2518,8 @@ static INLINE2 void i_mov_dispax(void)
 {
     /* Opcode: 0xa3 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned addr;
@@ -2354,6 +2557,8 @@ static INLINE2 void i_movsw(void)
 {
     /* Opcode: 0xa5 
        Length: 1
+       UsesFlags: DF
+       ChangesFlags: None
      */
 
     register unsigned di = ReadWord(&wregs[DI]);
@@ -2431,6 +2636,8 @@ static INLINE2 void i_test_ald8(void)
 {
     /* Opcode: 0xa8 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: CF,OF,AF,ZF,SF,PF
      */
 
     register unsigned tmp1 = (unsigned)*bregs[AL];
@@ -2467,6 +2674,8 @@ static INLINE2 void i_stosb(void)
 {
     /* Opcode: 0xaa 
        Length: 1
+       UsesFlags: DF
+       ChangesFlags: None
      */
 
     register unsigned di = ReadWord(&wregs[DI]);
@@ -2480,6 +2689,8 @@ static INLINE2 void i_stosw(void)
 {
     /* Opcode: 0xab 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned di = ReadWord(&wregs[DI]);
@@ -2507,6 +2718,8 @@ static INLINE2 void i_lodsw(void)
 {
     /* Opcode: 0xad 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned si = ReadWord(&wregs[SI]);
@@ -2572,6 +2785,8 @@ static INLINE2 void i_mov_ald8(void)
 {
     /* Opcode: 0xb0 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[AL] = GetMemInc(c_cs,ip);
@@ -2582,6 +2797,8 @@ static INLINE2 void i_mov_cld8(void)
 {
     /* Opcode: 0xb1 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[CL] = GetMemInc(c_cs,ip);
@@ -2592,6 +2809,8 @@ static INLINE2 void i_mov_dld8(void)
 {
     /* Opcode: 0xb2 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[DL] = GetMemInc(c_cs,ip);
@@ -2602,6 +2821,8 @@ static INLINE2 void i_mov_bld8(void)
 {
     /* Opcode: 0xb3 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[BL] = GetMemInc(c_cs,ip);
@@ -2612,6 +2833,8 @@ static INLINE2 void i_mov_ahd8(void)
 {
     /* Opcode: 0xb4 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[AH] = GetMemInc(c_cs,ip);
@@ -2622,6 +2845,8 @@ static INLINE2 void i_mov_chd8(void)
 {
     /* Opcode: 0xb5 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[CH] = GetMemInc(c_cs,ip);
@@ -2632,6 +2857,8 @@ static INLINE2 void i_mov_dhd8(void)
 {
     /* Opcode: 0xb6 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[DH] = GetMemInc(c_cs,ip);
@@ -2642,6 +2869,8 @@ static INLINE2 void i_mov_bhd8(void)
 {
     /* Opcode: 0xb7 
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[BH] = GetMemInc(c_cs,ip);
@@ -2652,6 +2881,8 @@ static INLINE2 void i_mov_axd16(void)
 {
     /* Opcode: 0xb8 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[AL] = GetMemInc(c_cs,ip);
@@ -2663,6 +2894,8 @@ static INLINE2 void i_mov_cxd16(void)
 {
     /* Opcode: 0xb9 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[CL] = GetMemInc(c_cs,ip);
@@ -2674,6 +2907,8 @@ static INLINE2 void i_mov_dxd16(void)
 {
     /* Opcode: 0xba 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[DL] = GetMemInc(c_cs,ip);
@@ -2685,6 +2920,8 @@ static INLINE2 void i_mov_bxd16(void)
 {
     /* Opcode: 0xbb 
        Length: 3
+       ChangesFlags: None
+       UsesFlags: None
      */
 
     *bregs[BL] = GetMemInc(c_cs,ip);
@@ -2695,6 +2932,8 @@ static INLINE2 void i_mov_bxd16(void)
 static INLINE2 void i_mov_spd16(void)
 {
     /* Opcode: 0xbc 
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[SPL] = GetMemInc(c_cs,ip);
@@ -2706,6 +2945,8 @@ static INLINE2 void i_mov_bpd16(void)
 {
     /* Opcode: 0xbd 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[BPL] = GetMemInc(c_cs,ip);
@@ -2717,6 +2958,8 @@ static INLINE2 void i_mov_sid16(void)
 {
     /* Opcode: 0xbe 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[SIL] = GetMemInc(c_cs,ip);
@@ -2728,6 +2971,8 @@ static INLINE2 void i_mov_did16(void)
 {
     /* Opcode: 0xbf 
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[DIL] = GetMemInc(c_cs,ip);
@@ -2763,6 +3008,8 @@ static INLINE2 void i_ret(void)
     /* Opcode: 0xc3 
        Attr: IsJump,IsRet
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
@@ -2782,6 +3029,8 @@ static INLINE2 void i_les_dw(void)
     /* Opcode: 0xc4
        Length: 2
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2819,6 +3068,8 @@ static INLINE2 void i_mov_bd8(void)
     /* Opcode: 0xc6 
        Length: 3
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2833,6 +3084,8 @@ static INLINE2 void i_mov_wd16(void)
     /* Opcode: 0xc7 
        Length: 4
        Attr: HasModRMRMW
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -2954,6 +3207,7 @@ static INLINE2 void i_d0pre(void)
        Length: 2
        Attr: Prefix,HasModRMRMB
      */
+    /* PENDING: Flags checked */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
     register BYTE *dest = GetModRMRMB(ModRM);
@@ -3028,6 +3282,7 @@ static INLINE2 void i_d1pre(void)
     /* Opcode: 0xd1 
        Attr: HasModRMRMW,IsPrefix
      */
+    /* PENDING: Flags checked */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
     register WORD *dest = GetModRMRMW(ModRM);
@@ -3222,6 +3477,7 @@ static INLINE2 void i_d3pre(void)
        Length: 2
        Attr: HasModRMRMW
      */
+    /* PENDING: Flags checked */
 
     unsigned ModRM;
     register WORD *dest;
@@ -3380,7 +3636,10 @@ static INLINE2 void i_escape(void)
     /* Opcode: 0xd8,0xd9,0xda,0xdb,0xdc,0xdd,0xde,0xdf 
        Length: 2
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: None
      */
+    /* PENDING: Strange - does nothing */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
     GetModRMRMB(ModRM);
@@ -3391,7 +3650,10 @@ static INLINE2 void i_loopne(void)
     /* Opcode: 0xe0 
        Attr: IsJump,IsShortJump
        Length: 2
+       UsesFlags: ZF
+       ChangesFlags: None
      */
+    /* PENDING: Double check */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
     register unsigned tmp = ReadWord(&wregs[CX])-1;
@@ -3429,6 +3691,8 @@ static INLINE2 void i_loop(void)
     /* Opcode: 0xe2 
        Attr: IsJump,IsShortJump
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3448,6 +3712,8 @@ static INLINE2 void i_jcxz(void)
     /* Opcode: 0xe3 
        Attr: IsJump,IsShortJump
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
@@ -3509,6 +3775,8 @@ static INLINE2 void i_call_d16(void)
     /* Opcode: 0xe8 
        Attr: IsJump,IsCall
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register unsigned tmp;
@@ -3533,6 +3801,8 @@ static INLINE2 void i_jmp_d16(void)
     /* Opcode: 0xe9 
        Attr: IsJump,IsShortJump
        Length: 3
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     register int tmp = GetMemInc(c_cs,ip);
@@ -3577,6 +3847,8 @@ static INLINE2 void i_jmp_d8(void)
     /* Opcode: 0xeb 
        Attr: IsJump,IsShortJump
        Length: 2
+       UsesFlags: None
+       ChangesFlags: None
      */
     register int tmp = (int)((INT8)GetMemInc(c_cs,ip));
 
@@ -3592,6 +3864,8 @@ static INLINE2 void i_inaldx(void)
 {
     /* Opcode: 0xec 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     *bregs[AL] = read_port(ReadWord(&wregs[DX]));
@@ -3600,6 +3874,8 @@ static INLINE2 void i_inaldx(void)
 static INLINE2 void i_inaxdx(void)
 {
     /* Opcode: 0xed 
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     unsigned port = ReadWord(&wregs[DX]);
@@ -3611,6 +3887,8 @@ static INLINE2 void i_inaxdx(void)
 static INLINE2 void i_outdxal(void)
 {
     /* Opcode: 0xee 
+       UsesFlags: None
+       ChangesFlags: None
      */
 
     write_port(ReadWord(&wregs[DX]), *bregs[AL]);
@@ -3619,6 +3897,8 @@ static INLINE2 void i_outdxal(void)
 static INLINE2 void i_outdxax(void)
 {
     /* Opcode: 0xef 
+       UsesFlags: None
+       ChangesFlags: None
      */
     unsigned port = ReadWord(&wregs[DX]);
 
@@ -3629,6 +3909,8 @@ static INLINE2 void i_outdxax(void)
 static INLINE2 void i_lock(void)
 {
     /* Opcode: 0xf0 
+       UsesFlags: None
+       ChangesFlags: None
      */
 }
 
@@ -3761,6 +4043,8 @@ static INLINE2 void i_cmc(void)
 {
     /* Opcode: 0xf5 
        Length: 1
+       UsesFlags: CF
+       ChangesFlags: CF
      */
 
     CF = !CF;
@@ -3772,6 +4056,7 @@ static INLINE2 void i_f6pre(void)
     /* Opcode: 0xf6 
        Attr: IsPrefix,HasModRMRMB
      */
+    /* PENDING: Flags checked */
     unsigned ModRM = GetMemInc(c_cs,ip);
     register BYTE *byte = GetModRMRMB(ModRM);
     register unsigned tmp = (unsigned)*byte;
@@ -3904,6 +4189,7 @@ static INLINE2 void i_f7pre(void)
     /* Opcode: 0xf7
        Attr: IsPrefix,HasModRMRMW
      */
+    /* PENDING: Checked for flags */
     unsigned ModRM = GetMemInc(c_cs,ip);
     WORD *wrd = GetModRMRMW(ModRM);
     register unsigned tmp = ReadWord(wrd);
@@ -4046,6 +4332,8 @@ static INLINE2 void i_clc(void)
 {
     /* Opcode: 0xf8 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: CF
      */
 
     CF = 0;
@@ -4056,6 +4344,8 @@ static INLINE2 void i_stc(void)
 {
     /* Opcode: 0xf9 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: CF
      */
 
     CF = 1;
@@ -4066,6 +4356,8 @@ static INLINE2 void i_cli(void)
 {
     /* Opcode: 0xfa 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: IF
      */
 
     IF = 0;
@@ -4076,6 +4368,8 @@ static INLINE2 void i_sti(void)
 {
     /* Opcode: 0xfb 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: IF
      */
 
     IF = 1;
@@ -4093,6 +4387,8 @@ static INLINE2 void i_cld(void)
 {
     /* Opcode: 0xfc 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: DF
      */
 
     DF = 0;
@@ -4103,6 +4399,8 @@ static INLINE2 void i_std(void)
 {
     /* Opcode: 0xfd 
        Length: 1
+       UsesFlags: None
+       ChangesFlags: DF
      */
 
     DF = 1;
@@ -4114,6 +4412,8 @@ static INLINE2 void i_fepre(void)
     /* Opcode: 0xfe 
        Length: 2
        Attr: HasModRMRMB
+       UsesFlags: None
+       ChangesFlags: OF,AF,ZF,SF,PF
      */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
@@ -4148,6 +4448,7 @@ static INLINE2 void i_ffpre(void)
        Attr: IsPrefix,IsJump,HasModRMRMW
        Length: 2
      */
+    /* PENDING: Flags checked */
 
     unsigned ModRM = GetMemInc(c_cs,ip);
     register WORD *dest = GetModRMRMW(ModRM);
