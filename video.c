@@ -18,8 +18,12 @@ extern VIDEO_DRIVER curses_video;
 extern VIDEO_DRIVER x_video;
 
 static VIDEO_DRIVER *modes[] = {
+#ifndef DISABLEX
     &x_video,
+#endif
+#ifndef DISABLECURSES
     &curses_video
+#endif
 };
 
 #define NUM_MODES	(sizeof(modes)/sizeof(*modes))

@@ -122,7 +122,6 @@ enum {
 
 #if defined(PCEMU_LITTLE_ENDIAN)
 #   define ChangeE(x) (WORD)(x)
-#error
 #else
 #   define ChangeE(x) (WORD)(((x) << 8) | ((BYTE)((x) >> 8)))
 #endif

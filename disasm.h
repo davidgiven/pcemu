@@ -104,6 +104,7 @@ enum instructions
 #define DF_NOSPACE 2
 
 static int table_8x[] = { add, or, adc, sbb, and, sub, xor, cmp };
+static int table_cx[] = { rol, ror, rcl, rcr };
 static int table_dx[] = { rol, ror, rcl, rcr, shl, shr, shl, sar };
 static int table_f67[] = { test, illegal, not, neg, mul, imul, divide, idiv };
 static int table_fe[] = { inc, dec, illegal, illegal, illegal, illegal, illegal, illegal };
@@ -309,8 +310,8 @@ static struct Disasm
 { mov, decode_rd },             /* 0xbd */
 { mov, decode_rd },             /* 0xbe */
 { mov, decode_rd },             /* 0xbf */
-{ db,  decode_databyte },       /* 0xc0 */
-{ db,  decode_databyte },       /* 0xc1 */
+{ none,decode_bd8, 0, table_cx }, /* 0xc0 */
+{ none,decode_wd8, 0, table_cx }, /* 0xc1 */
 { ret, decode_d16 },            /* 0xc2 */
 { ret },                        /* 0xc3 */
 { les, decode_r16w },           /* 0xc4 */
