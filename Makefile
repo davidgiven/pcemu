@@ -24,6 +24,8 @@
 # -DSOLARIS          If you are using Solaris (only 2.3 has been tested)
 # -DSGI              If you are using an SGI
 # -DRS6000           If you are using an RS6000
+# -DDISABLEX         To disable the X output layer
+# -DDISABLECURSES    To disable the curses output layer
 #
 # Note that when compiling on the RS6000 and SGI using the standard cc compiler
 # specifying -O2 to optimise the code results in the emulator crashing. I
@@ -47,11 +49,12 @@
 # been known to crash the emulator when running on certain machines (80x86
 # based PCs under Linux, and HPs running HPUX). 
 
-# Linux/ppc settings
+# Linux settings
 CC =		gcc
 OPTIONS =	-DALIGNED_ACCESS -DBIGCASE -DINLINE_FUNCTIONS -DDISABLE_MFS
 XROOT = 	/usr/X11R6
 CFLAGS = 	-O2 -fomit-frame-pointer -fno-strength-reduce -Wall
+#CFLAGS =	-ggdb
 
 # Solaris, thanks to Moritz Barnsnick
 #CC = 		gcc
@@ -59,17 +62,26 @@ CFLAGS = 	-O2 -fomit-frame-pointer -fno-strength-reduce -Wall
 #XROOT = 	/usr/openwin
 #CFLAGS = 	-O2 -Wall
 
+XLIBS = -lXext -lX11
+CURSESLIBS = -lncurses
+
+# Cross compiling to win32 settings
+#CC =		i586-mingw32msvc-gcc
+#OPTIONS =	-DALIGNED_ACCESS -DBIGCASE -DINLINE_FUNCTIONS -DDISABLE_MFS -DDISABLEX=1
+#XROOT = 	/usr/X11R6
+#CFLAGS = 	-O2 -fomit-frame-pointer -fno-strength-reduce -Wall
+#CFLAGS =	-ggdb
+
 # You may need to add -N to the LFLAGS if you get sporadic segmentation
 # faults. So far I have only needed to do this when compiling under Linux
 # as Xlib seems to be mysteriously writing to its text segment
 
 LFLAGS = 	-g
 
-LIBRARIES =	-L$(XROOT)/lib		\
-		-lXext			\
-		-lX11
+LIBRARIES =	-L$(XROOT)/lib $(XLIBS) $(CURSESLIBS)
 
-LIBRARIES := 	$(LIBRARIES) -lncurses
+XOFILES = 	xstuff.o
+CURSESOFILES =	curses.o
 
 OFILES =	main.o		\
 		cpu.o		\
@@ -81,9 +93,8 @@ OFILES =	main.o		\
 		mfs.o		\
 		ems.o		\
 		video.o		\
-		curses.o	\
-		xstuff.o	\
-		config.o
+		config.o	\
+		$(XOFILES) $(CURSESOFILES)
 
 PROGNAME  =	pcemu
 
