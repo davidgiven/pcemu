@@ -17,8 +17,6 @@
 # -DDEBUG            prints lots of debugging messages.
 # -DDEBUGGER         compiles in the debugger
 # -DKBUK             if you have a UK style 102 key keyboard
-# -DBIG_ENDIAN       if your computer is big-endian (Sparc, 68000 etc)
-# -DLITTLE_ENDIAN    if your computer is little-endian (80x86 etc)
 # -DALIGNED_ACCESS   if your computer requires words to be on even boundaries
 # -DBIGCASE          If your compiler/computer can handle 256 case switches
 #
@@ -49,11 +47,17 @@
 # been known to crash the emulator when running on certain machines (80x86
 # based PCs under Linux, and HPs running HPUX). 
 
-CC =		gcc -Wall
+# Linux/ppc settings
+CC =		gcc
 OPTIONS =	-DALIGNED_ACCESS -DBIGCASE -DINLINE_FUNCTIONS -DDISABLE_MFS
 XROOT = 	/usr/X11R6
-#CFLAGS = 	-g
-CFLAGS = 	-O2 -fomit-frame-pointer -fno-strength-reduce
+CFLAGS = 	-O2 -fomit-frame-pointer -fno-strength-reduce -Wall
+
+# Solaris, thanks to Moritz Barnsnick
+#CC = 		gcc
+#OPTIONS = 	-DALIGNED_ACCESS -DBIGCASE -DSOLARIS -DINLINE_FUNCTIONS -DBOOT1_44
+#XROOT = 	/usr/openwin
+#CFLAGS = 	-O2 -Wall
 
 # You may need to add -N to the LFLAGS if you get sporadic segmentation
 # faults. So far I have only needed to do this when compiling under Linux
@@ -65,7 +69,7 @@ LIBRARIES =	-L$(XROOT)/lib		\
 		-lXext			\
 		-lX11
 
-LIBRARIES := 	$(LIBRARIES) -lefence -lncurses
+LIBRARIES := 	$(LIBRARIES) -lncurses
 
 OFILES =	main.o		\
 		cpu.o		\
