@@ -1,0 +1,4 @@
+#! /bin/sh 
+patch Makefile <Makefile.patch
+patch bios.c <bios.c.patch
+patch bios.h <bios.h.patch
