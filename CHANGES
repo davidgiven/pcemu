@@ -1,4 +1,17 @@
+1.2.1
+There was a initilisation bug in the ems code that would crash it
+reliably on startup.  The EMS code has some interesting edge
+conditions on the Total_EMS_Handles variables, so the emu may segfault
+when an application uses EMS.  Thanks to Moritz Barsnick and Fred
+Weigel.
 
+FreeDOS beta 5 wont run as it uses the 386 specific FS register.  Beta
+4 works fine.
+
+Added an example set of flags for Solaris and changed on_exit to
+atexit (Moritz Barsnick).
+
+Updated the README to reflect the new .pcemurc
 
 1.01
 
