@@ -1,0 +1,22 @@
+In following with tradition, this document covers the changes since
+David Given's release.
+
+The video output layer was split, and a ncurses layer was added. You
+can now run directly on a terminal by adding the
+
+video curses
+
+line to your pcemurc.  X is the default.
+
+A few of the missing 186 instructions were added so that FreeDOS could
+boot.  Some were hooked in but not implemented (especially the mul
+instructions).
+
+The code was updated to compile cleanly against glibc 2.2.1.  It has
+been tested under Debian 2.2-powerpc.  There is some weird memory
+allocation bug, such that it only runs with electric fence installed
+on my system.  This will be tracked down.
+
+Michael Hope
+michaelh@juju.net.nz
+21 Jan 2001
