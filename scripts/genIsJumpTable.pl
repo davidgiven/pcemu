@@ -19,7 +19,7 @@ while (<>) {
 	$vals{$1} = $2;
       }
       else {
-	die "Invalid line $_";
+	die "$.:Invalid line $_";
       }
     }
   }
@@ -74,6 +74,44 @@ for ($i = 0; $i < 256; $i++) {
   }
   else {
     print "    $length, /* $i */\n";
+  }
+}
+
+print "    0\n};\n\n";
+
+print "static const UINT16 changes_flags[] =\n{\n";
+
+for ($i = 0; $i < 256; $i++) {
+  $flags = $opcodes{$i}{'ChangesFlags'};
+
+  unless ($flags) {
+    print "    FLAGS_ALL,\n";
+  }
+  else {
+    @flagList = ( );
+    foreach $flag (split /,/, $flags) {
+      push @flagList, "FLAG_$flag";
+    }
+    print "    " . join(' | ', @flagList) . ", /* $i */\n";
+  }
+}
+
+print "    0\n};\n\n";
+
+print "static const UINT16 uses_flags[] =\n{\n";
+
+for ($i = 0; $i < 256; $i++) {
+  $flags = $opcodes{$i}{'UsesFlags'};
+
+  unless ($flags) {
+    print "    FLAGS_ALL,\n";
+  }
+  else {
+    @flagList = ( );
+    foreach $flag (split /,/, $flags) {
+      push @flagList, "FLAG_$flag";
+    }
+    print "    " . join(' | ', @flagList) . ", /* $i */\n";
   }
 }
 

@@ -144,6 +144,14 @@ extern unsigned sregs[4];   /* Always native machine word order */
 extern unsigned ip;	     /* Always native machine word order */
 
     /* All the byte flags will either be 1 or 0 */
+/* Flags are:
+   CF - Carry Flag
+   PF - Parity Flag
+   ZF - Zero Flag
+   TF - Trap Flag
+   IF - Interrupt Flag
+   DF - 'D' (Decimal?) Flag
+*/
 extern BYTE CF, PF, ZF, TF, IF, DF;
 
     /* All the word flags may be either none-zero (true) or zero (false) */
