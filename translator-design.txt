@@ -1,0 +1,76 @@
+Notes
+
+If we do translate, then we need a way of flushing the translated code
+when a code memory write occurs.  The x86 has no separation of code
+and data so we need to track it.  According to the mips stats:
+
+code_reads: 81583270
+code_writes: 775
+total_writes: 3789728
+non_memory_writes: 161163510
+
+So code area writes are very infrequent so the detection must be fast
+but the flushing doesn't have to be.
+
+The current interpreter uses one write function for both register and
+memory writes requiring the write tracker to filter out non-memory
+writes.  Expensive - the translated code shouldn't have this
+limitation.
+
+How can the program detect what code to translate?  Don't want too
+much of an overhead tracking how many times this chunk has executed
+nor do you want too much of an overhead checking if translated code
+exists.  Could hook into any jumps - record the number of times an
+address is jumped to, and when it hits a certain limit translate it.
+Limits translated blocks to those that are entered from a jump, which
+is the definition of the start of a basic block.  Except small
+internal loops.  
+
+Profiling mips.com is interesting.  Adding profiling that
+records the number of times a jump target is hit and the number of
+bytes that execute before another jump occurs shows that 98.80% of the
+work (# hits * block length) occurs in the highest total work blocks.
+The statistics are:
+
+Top 1	       22.14%
+Top 10	       73.30%
+Top 25	       85.11%
+Top 50	       92.05%
+Top 75	       94.75%
+Top 100	       96.21%
+Top 150	       97.66%
+Top 200	       98.35%
+Top 250	       98.76%
+
+Which is a good exponential growth towards an asmytope.  Many of the
+small loops are probably within a bigger basic block - could translate
+much more of the code if you can translate backwards inside block
+loops inline with the bigger block.  Perhaps check all relative short
+jumps, check if the offset is negative, and check if the offset is on
+or after the start of this block.
+
+Trimming all blocks whose length is less than 10 bytes gives similar
+results to above, but the peek is 58% of the total execution hitting
+50% after 15 instructions.  Need to inline.
+
+To go further, especially to profile how big the blocks would be under
+the different optimisations, requires a higher level model of the
+processor.
+
+CPU description
+Most of the CPU description is the current interpreter C code.  The
+rest of the description could be embedded in the comments.  Nice as
+you can store it as .c and edit it in .c mode.  Problems:
+
+* Handling macro generated instructions.  These are:
+   Basic logical operations (AND, OR, XOR)
+   Jumps
+   Much of the code uses defines in line for the common ops, but those
+above also use it for the definition.
+* Translated form definitions
+
+Could use a template module in perl to do the macros.  Need to split
+the macro definitions from the rest of the code - can be done using a
+special keyword at the function definition.  Implement using IMPLEMENT
+{macroName} [ARG=val*] ;
+
