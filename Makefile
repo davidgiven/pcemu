@@ -108,7 +108,13 @@ GLOBAL_DEP =	global.h	\
 
 all: $(PROGNAME)
 
-cpu.o:	$(GLOBAL_DEP) cpu.h instr.h debugger.h hardware.h
+cpu-instr.c: cpu-def.c scripts/*.pl
+	perl scripts/expandCpuDef.pl cpu-def.c > cpu-instr.c
+
+cpu-dispatch.c: cpu-instr.c scripts/*.pl
+	perl scripts/genDispatch.pl cpu-instr.c | sort > cpu-dispatch.c
+
+cpu.o:	$(GLOBAL_DEP) cpu.h cpu-instr.c cpu-dispatch.c instr.h debugger.h hardware.h
 ems.o:	$(GLOBAL_DEP) cpu.h bios.h
 main.o: $(GLOBAL_DEP) bios.h hardware.h video.h
 bios.o: $(GLOBAL_DEP) bios.h cpu.h vga.h vgahard.h debugger.h hardware.h \
