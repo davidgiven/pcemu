@@ -7,6 +7,7 @@
 #
 # The following are the defaults (unless changed at compile time)
 
+# Note: see new.pcemurc.  These options no longer work (25/1/01)
 bootfile DriveA
 boottype 144
 cursorspeed 30

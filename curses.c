@@ -25,7 +25,7 @@ static void curses_init(void)
     nodelay(stdscr, TRUE);
     keypad(scr, TRUE);
 
-    on_exit((void (*)(int, void *))curses_end, NULL);
+    atexit(curses_end);
 }
 
 static void curses_flush(void)

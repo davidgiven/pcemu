@@ -64,7 +64,7 @@ void EMS_Setup(void)
   unsigned tmp,tmp2;
   D(printf("In EMS setup\n"););
   Unallocated_Pages=Total_EMS_Pages; 
-  for (tmp=0;tmp<=Total_EMS_Handles+1;tmp++) 
+  for (tmp=0;tmp<=Total_EMS_Handles;tmp++) 
   {
     /* Added the =0. Was just for(tmp2;tmp2... Accident? dtrg */
     for (tmp2=0;tmp2<4;tmp2++) 
