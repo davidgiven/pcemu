@@ -84,6 +84,48 @@ static WORD zero_word = 0;
 static WORD *ModRMRMWRegs[256];
 static BYTE *ModRMRMBRegs[256];
 
+#ifdef PROFILER
+/* For data separation profiling */
+enum {
+  IS_CODE = 1
+};
+
+static BYTE separation_flags[MEMORY_SIZE];
+static UINT32 code_reads;
+static UINT32 code_writes;
+static UINT32 total_writes;
+static UINT32 non_memory_writes;
+
+static INLINEP void RecordWrite(void *x)
+{
+    if ((BYTE *)x >= memory && (BYTE *)x < (memory + MEMORY_SIZE))
+    {
+	int at;
+	total_writes++;
+	at = (BYTE *)x - memory;
+
+	if (separation_flags[at] & IS_CODE)
+	{
+	    code_writes++;
+	    separation_flags[at] &= IS_CODE;
+	}
+    }
+    else
+    {
+	non_memory_writes++;
+    }
+}
+
+static INLINEP void RecordCodeRead(void *x)
+{
+    int at;
+    code_reads++;
+    at = (BYTE *)x - memory;
+    separation_flags[at] |= IS_CODE;
+}
+
+#endif
+
 #if defined(PCEMU_LITTLE_ENDIAN) && !defined(ALIGNED_ACCESS)
 #   define ReadWord(x) (*(x))
 #   define WriteWord(x,y) (*(x) = (y))
@@ -107,14 +149,18 @@ static INLINEP WORD ReadWord(void *x)
 static INLINEP void WriteWord(void *x, WORD y) 
 {
     *(BYTE *)(x) = (BYTE)(y);
+    RecordWrite(x);
     *((BYTE *)(x)+1) = (BYTE)((y) >> 8);
+    RecordWrite(x+1);
 }
 
 static INLINEP void CopyWord(void *x, void *y) 
 {
     /* May be un-aligned, so can't use WORD * = WORD * */
     ((BYTE *)x)[0] = ((BYTE *)y)[0];
+    RecordWrite(x);
     ((BYTE *)x)[1] = ((BYTE *)y)[1];
+    RecordWrite(x+1);
 }
 
 static INLINEP BYTE ReadByte(void *x) 
@@ -125,6 +171,7 @@ static INLINEP BYTE ReadByte(void *x)
 static INLINEP void WriteByte(void *x, BYTE y) 
 {
     *(BYTE *)(x) = y;
+    RecordWrite(x);
 }
 
 static INLINEP void CopyByte(void *x, void *y) 
@@ -419,17 +466,7 @@ static INT16 can_be_compiled_seed[] =
     -1
 };
 
-/* For data separation profiling */
-enum {
-  IS_CODE = 1
-};
-
-static BYTE separation_flags[MEMORY_SIZE];
-static UINT32 code_reads;
-static UINT32 code_writes;
-static UINT32 total_writes;
-
-void dump_instruction_hits(void)
+void dump_profiling(void)
 {
     int i;
 
@@ -449,6 +486,17 @@ void dump_instruction_hits(void)
 	    printf("%u\t%u\n", i, max_run[i]);
 	}
     }
+
+    printf("# Separation summary\n"
+	   "code_reads: %u\n"
+	   "code_writes: %u\n"
+	   "total_writes: %u\n"
+	   "non_memory_writes: %u\n",
+	   code_reads,
+	   code_writes,
+	   total_writes,
+	   non_memory_writes
+	);
 }
 
 static void init_profiler(void)
@@ -4437,6 +4485,8 @@ void execute(void)
 #if defined(BIGCASE) && !defined(RS6000)
   /* Some compilers cannot handle large case statements */
 #ifdef PROFILER
+	RecordCodeRead(c_cs + ip);
+
 	is = GetMemInc(c_cs, ip);
 	instruction_hits[is]++;
 
