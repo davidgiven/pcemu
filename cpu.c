@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "mytypes.h"
 #include "cpu.h"
@@ -42,6 +43,14 @@
 #ifdef DEBUG
 #	include <stdlib.h>
 #endif
+
+#define NUM_ELEMS(_a)	(sizeof(_a)/sizeof(_a[0]))
+
+/* Instrumentation options */
+//#define INST_MEMORY_ACCESS
+//#define INST_JUMP_TARGETS
+#define TRANSLATOR	1
+#define ASSERT(_a)
 
 WORD wregs[8];	     /* Always little-endian */
 BYTE *bregs[16];     /* Points to bytes within wregs[] */
@@ -85,7 +94,7 @@ static WORD zero_word = 0;
 static WORD *ModRMRMWRegs[256];
 static BYTE *ModRMRMBRegs[256];
 
-#ifdef PROFILER
+#if defined(INST_MEMORY_ACCESS)
 /* For data separation profiling */
 enum {
   IS_CODE = 1
@@ -96,9 +105,11 @@ static UINT32 code_reads;
 static UINT32 code_writes;
 static UINT32 total_writes;
 static UINT32 non_memory_writes;
+#endif
 
-static INLINEP void RecordWrite(void *x)
+static INLINE2 void RecordWrite(void *x)
 {
+#if defined(INST_MEMORY_ACCESS)
     if ((BYTE *)x >= memory && (BYTE *)x < (memory + MEMORY_SIZE))
     {
 	int at;
@@ -115,49 +126,75 @@ static INLINEP void RecordWrite(void *x)
     {
 	non_memory_writes++;
     }
+#endif
 }
 
-static INLINEP void RecordCodeRead(void *x)
+static INLINE2 void RecordCodeRead(void *x)
 {
+#if defined(INST_MEMORY_ACCESS)
     int at;
     code_reads++;
     at = (BYTE *)x - memory;
     separation_flags[at] |= IS_CODE;
+#endif
 }
 
+#if defined(TRANSLATOR)
+static UINT8 eval_flags[MEMORY_SIZE];
+static INT32 flag_override_hits[256];
+#endif
+
+#if defined(TRANSLATOR) || defined(INST_JUMP_TARGETS)
+static UINT8 jump_target_hits[MEMORY_SIZE];
+static UINT8 is_translated[MEMORY_SIZE];
+#endif
+#if defined(INST_JUMP_TARGETS)
 static INT32 last_jump_target;
-static INT32 jump_target_hits[MEMORY_SIZE];
 static INT32 bb_length[MEMORY_SIZE];
+#endif
+
+static INLINE2 BYTE must_eval_flags(unsigned iip)
+{
+    return eval_flags[c_cs + iip - memory - 1] == 0;
+//    return 1;
+}
 
 static void scan_for_translation(void);
 
-static INLINEP void PreJumpHook(void *x)
+static INLINE2 void PreJumpHook(void *x)
 {
+#if defined(INST_JUMP_TARGETS)
     INT32 offset = (BYTE *)x - memory;
-    assert(offset >= 0 && offset < MEMORY_SIZE);
+    ASSERT(offset >= 0 && offset < MEMORY_SIZE);
 
     if (last_jump_target != 0)
     {
-	assert(offset >= last_jump_target);
+	ASSERT(offset >= last_jump_target);
 	bb_length[last_jump_target] += offset - last_jump_target;
-	assert(bb_length[last_jump_target] >= 0);
+	ASSERT(bb_length[last_jump_target] >= 0);
     }
+#endif
 }
 
-static INLINEP void PostJumpHook(void *x)
+static INLINE2 void PostJumpHook(void *x)
 {
     INT32 offset = (BYTE *)x - memory;
-    assert(offset >= 0 && offset < MEMORY_SIZE);
+    ASSERT(offset >= 0 && offset < MEMORY_SIZE);
 
+#if defined(INST_JUMP_TARGETS)
+    /* PENDING: Double increment */
     jump_target_hits[offset]++;
     last_jump_target = offset;
+#endif
 
-    if (jump_target_hits[offset] == 20)
+#if defined(TRANSLATOR)
+    if (++jump_target_hits[offset] == 20 && !is_translated[offset])
     {
 	scan_for_translation();
+	is_translated[offset] = 1;
     }
-}
 #endif
+}
 
 #if defined(PCEMU_LITTLE_ENDIAN) && !defined(ALIGNED_ACCESS)
 #   define ReadWord(x) (*(x))
@@ -174,12 +211,12 @@ static INLINEP void PostJumpHook(void *x)
 #endif
 
 #else
-static INLINEP WORD ReadWord(void *x) 
+static INLINE2 WORD ReadWord(void *x) 
 {
     return ((WORD)(*((BYTE *)(x))) + ((WORD)(*((BYTE *)(x)+1)) << 8));
 }
 
-static INLINEP void WriteWord(void *x, WORD y) 
+static INLINE2 void WriteWord(void *x, WORD y) 
 {
     *(BYTE *)(x) = (BYTE)(y);
     RecordWrite(x);
@@ -187,7 +224,7 @@ static INLINEP void WriteWord(void *x, WORD y)
     RecordWrite(x+1);
 }
 
-static INLINEP void CopyWord(void *x, void *y) 
+static INLINE2 void CopyWord(void *x, void *y) 
 {
     /* May be un-aligned, so can't use WORD * = WORD * */
     ((BYTE *)x)[0] = ((BYTE *)y)[0];
@@ -196,30 +233,30 @@ static INLINEP void CopyWord(void *x, void *y)
     RecordWrite(x+1);
 }
 
-static INLINEP BYTE ReadByte(void *x) 
+static INLINE2 BYTE ReadByte(void *x) 
 {
     return *(BYTE *)(x);
 }
 
-static INLINEP void WriteByte(void *x, BYTE y) 
+static INLINE2 void WriteByte(void *x, BYTE y) 
 {
     *(BYTE *)(x) = y;
     RecordWrite(x);
 }
 
-static INLINEP void CopyByte(void *x, void *y) 
+static INLINE2 void CopyByte(void *x, void *y) 
 {
     ((BYTE *)x)[0] = ((BYTE *)y)[0];
 }
 
 #if 0
-static INLINEP void PutMemW(BYTE *Seg, int Off, WORD x) 
+static INLINE2 void PutMemW(BYTE *Seg, int Off, WORD x) 
 {
     Seg[Off] = (BYTE)(x);
     Seg[(WORD)(Off)+1] = (BYTE)((x) >> 8);
 }
 
-static INLINEP WORD GetMemW(BYTE *Seg, int Off) 
+static INLINE2 WORD GetMemW(BYTE *Seg, int Off) 
 {
     ((WORD)Seg[Off] + ((WORD)Seg[(WORD)(Off)+1] << 8));
 }
@@ -279,11 +316,13 @@ void trap(void);
 { \
       register unsigned tmp = (unsigned)ReadWord(&wregs[Reg]); \
       register unsigned tmp1 = tmp+1; \
+      if (must_eval_flags(ip)) { \
       SetOFW_Add(tmp1,tmp,1); \
       SetAF(tmp1,tmp,1); \
       SetZFW(tmp1); \
       SetSFW(tmp1); \
       SetPF(tmp1); \
+      } \
       WriteWord(&wregs[Reg],tmp1); \
 }
 
@@ -328,32 +367,32 @@ enum
 
 #include "cpu-attrs.c"
 
-static INLINEP int is_jump(BYTE op)
+static INLINE2 int is_jump(BYTE op)
 {
     return cpu_attrs[op] & IS_JUMP;
 }
 
-static INLINEP int is_short_jump(BYTE op)
+static INLINE2 int is_short_jump(BYTE op)
 {
     return cpu_attrs[op] & IS_SHORT_JUMP;
 }
 
-static INLINEP int is_prefix(BYTE op)
+static INLINE2 int is_prefix(BYTE op)
 {
     return cpu_attrs[op] & IS_PREFIX;
 }
 
-static INLINEP int has_modrm(BYTE op)
+static INLINE2 int has_modrm(BYTE op)
 {
     return cpu_attrs[op] & HAS_MODRM;
 }
 
-static INLINEP int has_modrmrmb(BYTE op)
+static INLINE2 int has_modrmrmb(BYTE op)
 {
     return cpu_attrs[op] & HAS_MODRMRMB;
 }
 
-static INLINEP int is_normal(BYTE op)
+static INLINE2 int is_normal(BYTE op)
 {
     return (cpu_attrs[op] & IS_PREFIX) == 0;
 }
@@ -382,11 +421,13 @@ static INLINEP int is_normal(BYTE op)
        'hot' blocks of code can get and how much code can be
        translated.
 */
-#define NUM_ELEMS(_a)	(sizeof(_a)/sizeof(_a[0]))
 
+#if defined(INST_INSTRUCTION_HITS)
 /* For instruction usage profiling */
 static UINT32 instruction_hits[256];
+#endif
 
+#if defined(INST_RUN_LENGTH)
 /* For run length profiling */
 static UINT32 max_run[1024];
 static int current_run;
@@ -449,6 +490,7 @@ static INT16 can_be_compiled_seed[] =
     0x07,	/* 278407 */
     -1
 };
+#endif
 
 static INT8 actual_instr_length[256];
 static UINT32 total_translatable_bytes;
@@ -463,13 +505,16 @@ void dump_profiling(void)
 {
     int i;
 
+#if defined(INST_INSTRUCTION_HITS)
     printf("# Instruction usage summary\n");
 
     for (i = 0; i < NUM_ELEMS(instruction_hits); i++)
     {
 	printf("0x%02X %u\n", i, instruction_hits[i]);
     }
+#endif
 
+#if defined(INST_RUN_LENGTH)
     printf("# Maximum run summary\n");
 
     for (i = 0; i < NUM_ELEMS(max_run); i++)
@@ -479,7 +524,9 @@ void dump_profiling(void)
 	    printf("%u\t%u\n", i, max_run[i]);
 	}
     }
+#endif
 
+#if defined(INST_MEMORY_ACCESS)
     printf("# Separation summary\n"
 	   "code_reads: %u\n"
 	   "code_writes: %u\n"
@@ -490,7 +537,9 @@ void dump_profiling(void)
 	   total_writes,
 	   non_memory_writes
 	);
+#endif
 
+#if defined(INST_JUMP_TARGETS)
     printf("# Jump target summary\n");
 
     for (i = 0; i < NUM_ELEMS(jump_target_hits); i++)
@@ -500,6 +549,7 @@ void dump_profiling(void)
 	    printf("0x%06X %u %u\n", i, jump_target_hits[i], bb_length[i]/jump_target_hits[i]);
 	}
     }
+#endif
 
     printf("# Actual instruction length\n");
 
@@ -538,16 +588,24 @@ void dump_profiling(void)
     {
 	printf("0x%02X %d\n", i, flag_eval_spoilers[i]);
     }
+
+    printf("# Lucky flag eval instructions\n");
+
+    for (i = 0; i < NUM_ELEMS(flag_override_hits); i++)
+    {
+	printf("0x%02X %d\n", i, flag_override_hits[i]);
+    }
 }
 
 static void init_profiler(void)
 {
     int i;
-
+#if defined(INST_RUN_LENGTH)
     for (i = 0; can_be_compiled_seed[i] >= 0; i++)
     {
 	can_be_compiled[can_be_compiled_seed[i]] = 1;
     }
+#endif
 }
 #endif
 
@@ -892,7 +950,7 @@ static INLINE BYTE *GetModRMRMB(unsigned ModRM)
                    ReadWord(ModRMRM[ModRM].reg2) + dest));
 }
 
-static INLINEP int get_modrm_length(unsigned ModRM)
+static INLINE2 int get_modrm_length(unsigned ModRM)
 {
     if (ModRMRM[ModRM].offset)
     {
@@ -952,12 +1010,14 @@ static int is_8e_translatable(unsigned sip)
     }
 }
 
+#if defined(TRANSLATOR)
 static void scan_for_translation(void)
 {
     unsigned sip = ip;
     int i;
     /* PENDING: To constant */
     BYTE *sources[9];
+    unsigned sourceic[9];
 
     memset(sources, 0, sizeof(sources));
 
@@ -966,6 +1026,7 @@ static void scan_for_translation(void)
     do
     {
 	unsigned ic = c_cs[sip];
+#if 0
 	if (ic == 0xff)
 	{
 	    if (is_ffpre_translatable(sip))
@@ -974,7 +1035,9 @@ static void scan_for_translation(void)
 	    }
 	    else
 	    {
+#if defined(INST_RUN_SPOILERS)
 		run_spoilers[ic]++;
+#endif
 		break;
 	    }
 	}
@@ -986,7 +1049,9 @@ static void scan_for_translation(void)
 	    }
 	    else
 	    {
+#if defined(INST_RUN_SPOILERS)
 		run_spoilers[ic]++;
+#endif
 		break;
 	    }
 	}
@@ -1000,24 +1065,40 @@ static void scan_for_translation(void)
 	    sip++;
 	    ic = c_cs[sip];
 	}
-	else if (cpu_length[ic] == 0 ||
+	else 
+#endif
+	    if (cpu_length[ic] == 0 ||
 	    !is_normal(ic))
 	{
+#if defined(INST_RUN_SPOILERS)
 	    run_spoilers[ic]++;
+#endif
 	    break;
 	}
 	else if (is_jump(ic))
 	{
+#if 0
 	    /* We may be able to inline short jumps */
 	    if (is_short_jump(ic))
 	    {
 	    }
 	    else
 	    {
+#if defined(INST_RUN_SPOILERS)
 		run_spoilers[ic]++;
+#endif
 		break;
 	    }
+#else
+#if defined(INST_RUN_SPOILERS)
+	    run_spoilers[ic]++;
+#endif
+	    break;
+#endif
 	}
+
+	assert(ic != 0x74 || is_jump(ic));
+	assert(ic != 0x74);
 
 	/* This instruction may require flags to be evaluated.  Scan
 	   what it uses and marked the generating instructions.
@@ -1029,15 +1110,24 @@ static void scan_for_translation(void)
 
 	    while (uses)
 	    {
-		if (sources[flag] != NULL)
+		if (flag & 1)
 		{
-		    flag_eval_hits++;
-		    sources[flag] = NULL;
-		    flag_eval_spoilers[ic]++;
-		}
-		else
-		{
-		    /* Flag is already evaluated */
+		    if (sources[flag] != NULL)
+		    {
+#if defined(INST_FLAG_USAGE)
+			flag_eval_hits++;
+			flag_eval_spoilers[ic]++;
+#endif
+			/* Re-mark the flag to be evaluated */
+			flag_override_hits[sourceic[flag]]--;
+			*sources[flag] = 0;
+			/* Unhook as the flag is now evaluated */
+			sources[flag] = NULL;
+		    }
+		    else
+		    {
+			/* Flag is already evaluated */
+		    }
 		}
 		/* PENDING: Pull the bit count flag trick */
 		uses >>= 1;
@@ -1055,11 +1145,24 @@ static void scan_for_translation(void)
 
 	    while (changes)
 	    {
-		if (sources[flag] != NULL)
+		if (flag & 1)
 		{
-		    flag_eval_skips++;
+		    if (sources[flag] != NULL)
+		    {
+			/* The instruction overrides an earlier flag and the
+			   earlier flag hasn't been evaluated. 
+			*/
+#if defined(INST_FLAG_USAGE)
+			flag_eval_skips++;
+#endif
+		    }
+		    sources[flag] = c_cs + sip - memory + eval_flags;
+		    sourceic[flag] = ic;
+		    /* Mark this as 'under evaluation'.  If nothing uses
+		       it then this flag will stay set. */
+		    *sources[flag] = 1;
+		    flag_override_hits[sourceic[flag]]++;
 		}
-		sources[flag] = c_cs + sip;
 		/* PENDING: Pull the bit count flag trick */
 		changes >>= 1;
 		flag++;
@@ -1081,17 +1184,25 @@ static void scan_for_translation(void)
     {
 	if (sources[i] != NULL)
 	{
+	    /* Mark as needs to be evaluated */
+	    *sources[i] = 0;
+	    flag_override_hits[sourceic[i]]--;
+#if defined(INST_FLAG_USAGE)
 	    flag_eval_hits++;
+#endif
 	}
     }
 
     printf("Found translatable block len %d\n", sip - ip);
     if ((sip - ip) > 0)
     {
+#if defined(INST_TRANSLATOR)
 	total_translatable_bytes += sip - ip;
 	total_translatable_blocks++;
+#endif
     }
 }
+#endif
 
 void trap(void)
 {
@@ -1131,6 +1242,7 @@ void execute(void)
 #if defined(BIGCASE) && !defined(RS6000)
   /* Some compilers cannot handle large case statements */
 #ifdef PROFILER
+#if 0
 	RecordCodeRead(c_cs + ip);
 
 	if (last_instr >= 0)
@@ -1196,8 +1308,9 @@ void execute(void)
 	}
 
 	last_ip = ip;
-
+#endif
 	is = GetMemInc(c_cs, ip);
+#if 0
 	last_instr = is;
 	instruction_hits[is]++;
 
@@ -1213,6 +1326,7 @@ void execute(void)
 	    }
 	    run_length = 1;
 	}
+#endif
 
 	switch (is)
         {

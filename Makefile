@@ -50,15 +50,15 @@
 # based PCs under Linux, and HPs running HPUX). 
 
 # Linux settings
-#CC =		gcc
+CC =		gcc-3.0
 #OPTIONS =	-DALIGNED_ACCESS -DBIGCASE -DINLINE_FUNCTIONS -DDISABLE_MFS
-#XROOT = 	/usr/X11R6
+XROOT = 	/usr/X11R6
 #CFLAGS = 	-O2 -fomit-frame-pointer -fno-strength-reduce -Wall
 
 # michaelh's profiling settings
-CC =		gcc
+#CC =		gcc-3.0
 OPTIONS =	-DALIGNED_ACCESS -DBIGCASE -DINLINE_FUNCTIONS -DDISABLE_MFS -DINLINEP=inline -DPROFILER
-XROOT = 	/usr/X11R6
+#XROOT = 	/usr/X11R6
 CFLAGS =	-ggdb -Wall
 
 # Solaris, thanks to Moritz Barnsnick
@@ -117,9 +117,9 @@ cpu-dispatch.c: cpu-instr.c scripts/*.pl
 cpu-attrs.c: cpu-instr.c scripts/*.pl
 	perl scripts/genIsJumpTable.pl cpu-instr.c > cpu-attrs.c
 
-cpu.o:	$(GLOBAL_DEP) cpu.h cpu-attrs.c cpu-instr.c cpu-dispatch.c instr.h debugger.h hardware.h
+cpu.o:	$(GLOBAL_DEP) cpu.h cpu-attrs.c cpu-instr.c cpu-dispatch.c instr.h debugger.h hardware.h Makefile
 ems.o:	$(GLOBAL_DEP) cpu.h bios.h
-main.o: $(GLOBAL_DEP) bios.h hardware.h video.h
+main.o: $(GLOBAL_DEP) bios.h hardware.h video.h Makefile
 bios.o: $(GLOBAL_DEP) bios.h cpu.h vga.h vgahard.h debugger.h hardware.h \
         keytabs.h mfs_link.h
 vga.o:	$(GLOBAL_DEP) bios.h cpu.h vga.h vgahard.h hardware.h
