@@ -1,0 +1,9 @@
+# New-style pcemurc for a DEC Alpha. The floppy drive is on /dev/floppy,
+# surprise surprise. The other floppy drive is a minimal boot image.
+# Put this in ~/.pcemurc.
+# --dg
+
+floppy 0 /dev/floppy 18 80 2
+floppy 1 /user.jh/dg/lib/pcemu/bootimage 10 20 2
+updatespeed 10
+cursorspeed 35

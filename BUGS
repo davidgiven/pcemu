@@ -1,0 +1,29 @@
+
+
+This is a current list of bugs/misfeatures (not counting programs
+which wouldn't run because of unimplemented functions/features)
+
+
+1.  keyb reverses keystrokes when they are typed quickly.
+    Not sure if this is my emulator at fault or keyb - investigating it...
+
+2.  mfs.c has bugs in it. I've fixed a couple of the more obvious
+    ones, but it occasinally crashes a bit when running xtree. (the
+    logged drive had to be disconnected and reconnnected again to cure
+    the problem)
+
+3.  MSDOS 5 dosshell program refuses to switch tasks - claiming there
+    is insufficient disk space. MSDOS 6 dosshell has no problem with this.
+    Both MSDOS 5 and MSDOS 6 cause an invalid opcode to be executed when
+    run on a monochrome screen.
+        
+
+4.  MSDOS very occasionally hangs with 'stack overflow' if network
+    load is heavy and lots of keys are pressed at once. 
+
+    Increasing the 'stacks=' line in the config.sys file can help this
+    problem.
+
+
+This list is almost certainly not complete.
+

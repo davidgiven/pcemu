@@ -1,0 +1,43 @@
+This document contains minimal information about the changes I've made to
+David Hedley's PC Emulator. I found David Hedley's PC Emulator several
+years ago, and spent some time working on it. Unfortunately this was ages
+ago and I can barely remember what I did!
+
+The improvements I *can* remember:
+
+      *	A pop-up menu allowing disc mounting and dismounting.
+      *	Better floppy disc support (inc. the above).
+      *	More secure. No longer stores host function pointers in the
+	target's memory space (!).
+      * Various smoothings-out all over.
+      * Other stuff I can't remember.
+
+There is hardly any documentation other than David Hedley's original
+documentation. This is from memory:
+
+The AUTOEJECT compile-time definition is of a command to execute when
+dismounting discs (I originally used a Sun with autoeject disc drives).
+
+Press any mouse button in the pcemu window to pop up the menu.
+
+Don't look in mfs.c, it's not pretty (it also doesn't work on the DEC
+Alpha).
+
+Most of my changes are commented. Some are not. One of these days I should
+get round to doing a proper diff against David Hedley's original source.
+If you really want to know, you can download the original version from my
+web site.
+
+I recently discovered that the EMS driver module was written by someone
+else. Perhaps if we get our act together a proper COPYRIGHT and AUTHORS
+file could be written.
+
+Um, I think that's the lot... as you might of guessed, this file was
+hacked up quickly while waiting for something to compile. I don't even
+know if it works properly. Have fun, and let me know what happens!
+
+David Given
+http://wiredsoc.ml.org/~dg
+dg@tao.co.uk
+
+
