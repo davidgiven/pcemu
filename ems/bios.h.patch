@@ -1,0 +1,8 @@
+12a13,14
+> * Modifications for EMS 3.2 Copyright 1994, Eric Korpela                    *
+> *                                                                           *
+29c31,32
+< 
+---
+> void int_67(void);
+> void EMS_Setup(void);

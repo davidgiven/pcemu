@@ -1,0 +1,27 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+
+Installation of the EMS driver....
+
+Copy the files ems.c, patch.script and *.patch into the pcemu source 
+directory.  Execute the patch.script file.  If you don't have "patch" on
+your machine you'll have to edit the source files manually. Remake the 
+'pcemu' executable.  
+
+Copy the 'EKEMM.SYS' file to your boot drive/file. and add a line to
+your config.sys 'DEVICE=EKEMM.SYS'
+
+That's all there is to it.  Report any problems to me. 
+(korpela@ssl.berkeley.edu)
+
+There is no warantee expressed or implied in this software.  Use at your own
+risk. See the files COPYRIGHT and ems.c for details.
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6
+
+iQCVAgUBLj6fC+BZ/OT/DJLdAQHBCAP+IfVDyFHzI8qaQB1QeqXRVxjyMo9zWzje
+QXzyk3SU40oE/GfRdQm8YBotvY5IkH2gbHIkxDOzxRuErlihVqARBJVW1sRPiJWz
+PGQ1k2CRfUPKbwGegyjTmYXNaUx1CCmGMgA5doxOJU61Xfa5Z3vMYLHRFd3HXag4
+CxFtntwo6rM=
+=agEc
+-----END PGP SIGNATURE-----
