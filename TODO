@@ -1,0 +1,62 @@
+
+                          Current list of things to do.
+
+Most of the below should be implemented in the next version due out in
+August/September.
+
+
+1. Recode CPU module.
+        Speed it up!
+        Reduce/eliminate penalty for big endian machines.
+        Possibly including lazy flag evaluation, although initial
+            indications are that it is actually slower than
+            calculating the flags after each instruction.
+
+2. Finish BIOS
+        Exactly how much of the BIOS remains to do is open to question
+            - it seems a little pointless wasting time writing code
+            for BIOS functions that no program ever uses The VGA BIOS will be
+            extended/rewritten to allow for graphics modes when they
+            are implemented.
+    
+3. Printer support
+        Dunno quite what to do about this - could dump all printer
+            output to a file I suppose.
+
+4. VGA support
+        Initially the CGA 640x200x2 320x200x4 and MCGA 320x200x256,
+            but eventually all VGA modes should be supported (albeit slowly :)
+        Support for different character sets...
+        Chip level access should eventually be possible (kind of vital
+            for the graphics modes). Dunno about some of the more
+            esoteric CRTC options though....
+
+5. Rewrite mfs.c
+        mfs.c needs a complete rewrite/redesign as it has bugs in it
+            and generates loads of warnings when compiling with the
+            -Wall flag...
+
+6. Chip level emulations...
+        The timer chip should be properly emulated so that accuracy is
+            not lost (irrespect of the resolution of the Unix system timer)
+
+7. Sound support
+        Should be possible to get the PC sound emulated OK (dunno
+            about the sound cards though)
+
+8. Idle time detector
+        The emulator should try to detect when programs running under
+            it are idle and consequently reduce the system load by
+            going to sleep for a bit
+
+9. Improved user interface
+        Configuration files for boot drive, keyboard mappings etc
+        Rewrite the X window module to allow for cutting/pasting etc
+        Use Imake
+
+
+This list is not complete! - anything in particular you would like to
+see, then please mail me
+
+David
+
