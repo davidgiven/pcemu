@@ -27,6 +27,7 @@
 #include "global.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 #include "mytypes.h"
 #include "cpu.h"
@@ -124,6 +125,31 @@ static INLINEP void RecordCodeRead(void *x)
     separation_flags[at] |= IS_CODE;
 }
 
+static INT32 last_jump_target;
+static INT32 jump_target_hits[MEMORY_SIZE];
+static INT32 bb_length[MEMORY_SIZE];
+
+static INLINEP void PreJumpHook(void *x)
+{
+    INT32 offset = (BYTE *)x - memory;
+    assert(offset >= 0 && offset < MEMORY_SIZE);
+
+    if (last_jump_target != 0)
+    {
+	assert(offset >= last_jump_target);
+	bb_length[last_jump_target] += offset - last_jump_target;
+	assert(bb_length[last_jump_target] >= 0);
+    }
+}
+
+static INLINEP void PostJumpHook(void *x)
+{
+    INT32 offset = (BYTE *)x - memory;
+    assert(offset >= 0 && offset < MEMORY_SIZE);
+
+    jump_target_hits[offset]++;
+    last_jump_target = offset;
+}
 #endif
 
 #if defined(PCEMU_LITTLE_ENDIAN) && !defined(ALIGNED_ACCESS)
@@ -375,8 +401,11 @@ static INLINE2 void i_ ## name ## _axd16(void) \
 #define JumpCond(name, cond) \
 static INLINE2 void i_j ## name ## (void) \
 { \
-      register int tmp = (int)((INT8)GetMemInc(c_cs,ip)); \
+      register int tmp; \
+      PreJumpHook(c_cs + ip); \
+      tmp = (int)((INT8)GetMemInc(c_cs,ip)); \
       if (cond) ip = (WORD)(ip+tmp); \
+      PostJumpHook(c_cs + ip); \
 }
 
 #ifdef PROFILER
@@ -397,6 +426,11 @@ static INLINE2 void i_j ## name ## (void) \
        detect how much a program performs self modification and how
        often a translated piece of code may have to be flushed and
        re-translated.
+   4. Jump targets and basic block length
+       Tracks how many times a location is jumped to and the number of
+       bytes executed before the next jump.  Useful to determine how
+       'hot' blocks of code can get and how much code can be
+       translated.
 */
 #define NUM_ELEMS(_a)	(sizeof(_a)/sizeof(_a[0]))
 
@@ -497,6 +531,16 @@ void dump_profiling(void)
 	   total_writes,
 	   non_memory_writes
 	);
+
+    printf("# Jump target summary\n");
+
+    for (i = 0; i < NUM_ELEMS(jump_target_hits); i++)
+    {
+	if (jump_target_hits[i] != 0)
+	{
+	    printf("0x%06X %u %u\n", i, jump_target_hits[i], bb_length[i]/jump_target_hits[i]);
+	}
+    }
 }
 
 static void init_profiler(void)
@@ -764,6 +808,11 @@ static void interrupt(unsigned int_num)
 {
     unsigned dest_seg, dest_off,tmp1;
 
+    /* PENDING: Not really a jump, but we have to include this to
+       stop any unreasonable values getting into the profiling table. 
+    */
+    PreJumpHook(c_cs + ip);
+
     i_pushf();
     dest_off = GetMemW(memory,int_num*4);
     dest_seg = GetMemW(memory,int_num*4+2);
@@ -781,6 +830,7 @@ static void interrupt(unsigned int_num)
 
     TF = IF = 0;    /* Turn of trap and interrupts... */
 
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -2639,6 +2689,8 @@ static INLINE2 void i_call_far(void)
 {
     register unsigned tmp, tmp1, tmp2;
 
+    PreJumpHook(c_cs + ip);
+
     tmp = GetMemInc(c_cs,ip);
     tmp += GetMemInc(c_cs,ip) << 8;
 
@@ -2656,6 +2708,8 @@ static INLINE2 void i_call_far(void)
     ip = (WORD)tmp;
     sregs[CS] = (WORD)tmp2;
     c_cs = SegToMemPtr(CS);
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -3131,12 +3185,16 @@ static INLINE2 void i_ret_d16(void)
     register unsigned tmp = ReadWord(&wregs[SP]);
     register unsigned count;
 
+    PreJumpHook(c_cs + ip);
+
     count = GetMemInc(c_cs,ip);
     count += GetMemInc(c_cs,ip) << 8;
 
     ip = GetMemW(c_stack,tmp);
     tmp += count+2;
     WriteWord(&wregs[SP],tmp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -3145,9 +3203,14 @@ static INLINE2 void i_ret(void)
     /* Opcode 0xc3 */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
+    
+    PreJumpHook(c_cs + ip);
+
     ip = GetMemW(c_stack,tmp);
     tmp += 2;
     WriteWord(&wregs[SP],tmp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -3214,6 +3277,8 @@ static INLINE2 void i_retf_d16(void)
     register unsigned tmp = ReadWord(&wregs[SP]);
     register unsigned count;
 
+    PreJumpHook(c_cs + ip);
+
     count = GetMemInc(c_cs,ip);
     count += GetMemInc(c_cs,ip) << 8;
 
@@ -3223,6 +3288,8 @@ static INLINE2 void i_retf_d16(void)
     c_cs = SegToMemPtr(CS);
     tmp += count+2;
     WriteWord(&wregs[SP],tmp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -3231,12 +3298,17 @@ static INLINE2 void i_retf(void)
     /* Opcode 0xcb */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
+
+    PreJumpHook(c_cs + ip);
+
     ip = GetMemW(c_stack,tmp);
     tmp = (WORD)(tmp+2);
     sregs[CS] = GetMemW(c_stack,tmp);
     c_cs = SegToMemPtr(CS);
     tmp += 2;
     WriteWord(&wregs[SP],tmp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -3272,12 +3344,17 @@ static INLINE2 void i_iret(void)
     /* Opcode 0xcf */
 
     register unsigned tmp = ReadWord(&wregs[SP]);
+
+    PreJumpHook(c_cs + ip);
+
     ip = GetMemW(c_stack,tmp);
     tmp = (WORD)(tmp+2);
     sregs[CS] = GetMemW(c_stack,tmp);
     c_cs = SegToMemPtr(CS);
     tmp += 2;
     WriteWord(&wregs[SP],tmp);
+
+    PostJumpHook(c_cs + ip);
 
     i_popf();
 #ifdef DEBUGGER
@@ -3712,9 +3789,13 @@ static INLINE2 void i_loopne(void)
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
     register unsigned tmp = ReadWord(&wregs[CX])-1;
 
+    PreJumpHook(c_cs + ip);
+
     WriteWord(&wregs[CX],tmp);
 
     if (!ZF && tmp) ip = (WORD)(ip+disp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 static INLINE2 void i_loope(void)
@@ -3724,9 +3805,13 @@ static INLINE2 void i_loope(void)
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
     register unsigned tmp = ReadWord(&wregs[CX])-1;
 
+    PreJumpHook(c_cs + ip);
+
     WriteWord(&wregs[CX],tmp);
 
     if (ZF && tmp) ip = (WORD)(ip+disp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 static INLINE2 void i_loop(void)
@@ -3736,9 +3821,13 @@ static INLINE2 void i_loop(void)
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
     register unsigned tmp = ReadWord(&wregs[CX])-1;
 
+    PreJumpHook(c_cs + ip);
+
     WriteWord(&wregs[CX],tmp);
 
     if (tmp) ip = (WORD)(ip+disp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 static INLINE2 void i_jcxz(void)
@@ -3746,9 +3835,13 @@ static INLINE2 void i_jcxz(void)
     /* Opcode 0xe3 */
 
     register int disp = (int)((INT8)GetMemInc(c_cs,ip));
+
+    PreJumpHook(c_cs + ip);
     
     if (wregs[CX] == 0)
         ip = (WORD)(ip+disp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 static INLINE2 void i_inal(void)
@@ -3796,6 +3889,8 @@ static INLINE2 void i_call_d16(void)
     register unsigned tmp;
     register unsigned tmp1 = (WORD)(ReadWord(&wregs[SP])-2);
 
+    PreJumpHook(c_cs + ip);
+
     tmp = GetMemInc(c_cs,ip);
     tmp += GetMemInc(c_cs,ip) << 8;
 
@@ -3803,6 +3898,8 @@ static INLINE2 void i_call_d16(void)
     WriteWord(&wregs[SP],tmp1);
 
     ip = (WORD)(ip+(INT16)tmp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -3811,9 +3908,14 @@ static INLINE2 void i_jmp_d16(void)
     /* Opcode 0xe9 */
 
     register int tmp = GetMemInc(c_cs,ip);
+
+    PreJumpHook(c_cs + ip);
+
     tmp += GetMemInc(c_cs,ip) << 8;
 
     ip = (WORD)(ip+(INT16)tmp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -3822,6 +3924,8 @@ static INLINE2 void i_jmp_far(void)
     /* Opcode 0xea */
 
     register unsigned tmp,tmp1;
+
+    PreJumpHook(c_cs + ip);
 
     tmp = GetMemInc(c_cs,ip);
     tmp += GetMemInc(c_cs,ip) << 8;
@@ -3832,6 +3936,8 @@ static INLINE2 void i_jmp_far(void)
     sregs[CS] = (WORD)tmp1;
     c_cs = SegToMemPtr(CS);
     ip = (WORD)tmp;
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -3839,7 +3945,12 @@ static INLINE2 void i_jmp_d8(void)
 {
     /* Opcode 0xeb */
     register int tmp = (int)((INT8)GetMemInc(c_cs,ip));
+
+    PreJumpHook(c_cs + ip);
+
     ip = (WORD)(ip+tmp);
+
+    PostJumpHook(c_cs + ip);
 }
 
 
@@ -4401,6 +4512,8 @@ static INLINE2 void i_ffpre(void)
         break;
         
     case 0x10:  /* CALL ew */
+	PreJumpHook(c_cs + ip);
+
         tmp = ReadWord(dest);
         tmp1 = (WORD)(ReadWord(&wregs[SP])-2);
         
@@ -4408,9 +4521,13 @@ static INLINE2 void i_ffpre(void)
         WriteWord(&wregs[SP],tmp1);
         
         ip = (WORD)tmp;
+
+	PostJumpHook(c_cs + ip);
         break;
         
     case 0x18:  /* CALL FAR ea */
+	PreJumpHook(c_cs + ip);
+
         tmp1 = (WORD)(ReadWord(&wregs[SP])-2);
         
         PutMemW(c_stack,tmp1,sregs[CS]);
@@ -4422,17 +4539,27 @@ static INLINE2 void i_ffpre(void)
         dest++;
         sregs[CS] = ReadWord(dest);
         c_cs = SegToMemPtr(CS);
+
+	PostJumpHook(c_cs + ip);
         break;
         
     case 0x20:  /* JMP ea */
+	PreJumpHook(c_cs + ip);
+
         ip = ReadWord(dest);
+
+	PostJumpHook(c_cs + ip);
         break;
         
     case 0x28:  /* JMP FAR ea */
+	PreJumpHook(c_cs + ip);
+
         ip = ReadWord(dest);
         dest++;
         sregs[CS] = ReadWord(dest);
         c_cs = SegToMemPtr(CS);
+
+	PostJumpHook(c_cs + ip);
         break;
         
     case 0x30:  /* PUSH ea */
