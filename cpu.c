@@ -258,7 +258,7 @@ static INLINE2 void i_ ## name ## _axd16(void) \
 
 
 #define JumpCond(name, cond) \
-static INLINE2 void i_j ## name ## (void) \
+static INLINE2 void i_j ## name (void) \
 { \
       register int tmp = (int)((INT8)GetMemInc(c_cs,ip)); \
       if (cond) ip = (WORD)(ip+tmp); \
@@ -3747,6 +3747,12 @@ static INLINE2 void i_repe(void)
     rep(1);
 }
 
+static INLINE2 void i_hlt(void)
+{
+    /* Opcode 0xf4 */
+
+    /* Currently, just a nop */
+}
 
 static INLINE2 void i_cmc(void)
 {
@@ -4473,7 +4479,7 @@ void execute(void)
         case 0xf1:    i_gobios(); break;
         case 0xf2:    i_repne(); break;
         case 0xf3:    i_repe(); break;
-        case 0xf4:    i_notdone(); break;
+        case 0xf4:    i_hlt(); break;
         case 0xf5:    i_cmc(); break;
         case 0xf6:    i_f6pre(); break;
         case 0xf7:    i_f7pre(); break;
