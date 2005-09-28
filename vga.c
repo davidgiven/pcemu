@@ -17,6 +17,7 @@
 #include "global.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "vga.h"
 #include "bios.h"
