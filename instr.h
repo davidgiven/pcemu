@@ -228,6 +228,7 @@ static INLINE2 void i_outdxax(void);
 static INLINE2 void i_lock(void);
 static INLINE2 void i_repne(void);
 static INLINE2 void i_repe(void);
+static INLINE2 void i_hlt(void);
 static INLINE2 void i_cmc(void);
 static INLINE2 void i_f6pre(void);
 static INLINE2 void i_f7pre(void);
@@ -489,7 +490,7 @@ void (*instruction[256])(void) =
     i_gobios,           /* 0xf1 */
     i_repne,            /* 0xf2 */
     i_repe,             /* 0xf3 */
-    i_notdone,
+    i_hlt,              /* 0xf4 */
     i_cmc,              /* 0xf5 */
     i_f6pre,            /* 0xf6 */
     i_f7pre,            /* 0xf7 */
